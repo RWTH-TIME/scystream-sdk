@@ -1,0 +1,8 @@
+[project]
+name = "scystream"
+version = "0.0.0"
+authors = [
+    { name = "Felix Evers", email = "evers@time.rwth-aachen.de" },
+    { name = "Paul Kalhorn", email = "kalhorn@time.rwth-aachen.de" }
+]
+description = "Coming soon"
