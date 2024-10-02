@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="scystream-sdk",  # PyPI package name
-    version="0.1.0",
+    name="scystream-sdk",
+    version="0.1.1",
     description="The official SDK for developing scystream compute blocks",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -10,7 +10,7 @@ setup(
     author="Felix Evers",
     author_email="evers@time.rwth-aachen.de",
     license="MIT",
-    packages=find_packages(),  # Automatically find package directories
+    packages=find_packages(),
     install_requires=[],
     classifiers=[
         "Programming Language :: Python :: 3",
