@@ -35,3 +35,22 @@ if __name__ == "__main__":
     main()
 
 ```
+
+### Development
+
+1. Create a venv
+
+```bash
+python3 -m venv .venv
+```
+
+2. Install the package within the venv 
+
+> [!INFO]
+> This will also install all the install_requirements from the setup.py
+
+```bash
+pip install -e .[dev]
+```
+
+3. Develop!
