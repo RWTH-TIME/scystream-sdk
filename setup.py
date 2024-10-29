@@ -12,7 +12,8 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "pydantic>=2.9.2"
+        "pydantic>=2.9.2",
+        "PyYAML>=6.0.2"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

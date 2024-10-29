@@ -1,12 +1,16 @@
 import yaml
 from typing import Optional, Dict, Literal, Any, Callable
-from pydantic import BaseModel, StrictStr, validator, Field
+from pydantic import BaseModel, StrictStr, field_validator, Field
 import os
 
 """
 This file contains the schema definition, the read function and validation
 for the config file.
 """
+
+PROJECT_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+print(PROJECT_ROOT_DIR)
 
 STRING_TYPE = "string"
 INT_TYPE = "int"
@@ -46,7 +50,7 @@ class InputOutputDefinitions(BaseModel):
     """
     If the type is spark_table, table_name must also be set
     """
-    @validator("table_name", always=True)
+    @field_validator("table_name")
     def validate_table_name(cls, v, values):
         set_type = values.get("type")
         if set_type == "spark_table":
@@ -58,7 +62,7 @@ class InputOutputDefinitions(BaseModel):
     """
     Check if the example corresponds with the inputs type
     """
-    @validator("example")
+    @field_validator("example")
     def validate_example_type(cls, v, values):
         expected_type = values.get("type")
 
@@ -82,11 +86,18 @@ class ComputeBlock(BaseModel):
     author: StrictStr
     entrypoints: Dict[StrictStr, Entrypoint]
 
-    @validator("entrypoints")
+    @field_validator("entrypoints")
     def check_entrypoints(cls, v):
         if not v:
             raise ValueError("At least one entrypoint must be defined.")
         return v
+
+
+def validate_config(config_path: str = CONFIG_FILE_DEFAULT_NAME) -> bool:
+    """
+    Reads the passed Compute Block YAML definition.
+    Returns True if the validation using pydantic was successfull
+    """
 
 
 def load_config(config_path: str = CONFIG_FILE_DEFAULT_NAME) -> ComputeBlock:
