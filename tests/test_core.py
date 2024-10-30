@@ -1,5 +1,5 @@
 import unittest
-from scystream_sdk.core import entrypoint, get_registered_functions
+from scystream.sdk.core import entrypoint, get_registered_functions
 
 
 class TestEntrypoint(unittest.TestCase):

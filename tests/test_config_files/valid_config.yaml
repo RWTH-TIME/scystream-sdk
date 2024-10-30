@@ -1,0 +1,29 @@
+name: "The first Web-Crawler"
+description: "This is a web crawler, it crawls text..."
+author: "John Doe"
+
+entrypoints:
+  crawl:
+    description: "Crawl text from specified URLs"
+    inputs:
+      url_list:
+        type: "list"
+        item_type: "string"
+        description: "List of URLs to crawl. Can be defined by the user."
+    outputs:
+      text_data:
+        type: "spark_table"
+        description: "Crawled text data in a spark table"
+        table_name: "text_data_spark"
+
+  analyze_url:
+    description: "Analyzes if data is crawlable"
+    inputs:
+      url-list:
+        type: "list"
+        item_type: "string"
+        description: "List of URLS to check"
+    outputs:
+      was_sucess:
+        type: "bool"
+        description: "True if all urls can be crawled"
