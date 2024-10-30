@@ -38,15 +38,17 @@ def _find_and_load_config(
     full_path = base_path / config_file_name
 
     if not full_path.is_file():
-        raise FileNotFoundError(f"Configuration file '{
-                                full_path}' not found.")
+        raise FileNotFoundError(
+            f"Configuration file '{full_path}' not found."
+        )
 
     try:
         with full_path.open("r") as file:
             config_data = yaml.safe_load(file)
     except FileNotFoundError:
-        raise FileNotFoundError(f"Configuration file '{
-                                full_path}' not found.'")
+        raise FileNotFoundError(
+            f"Configuration file '{full_path}' not found.'"
+        )
     except yaml.YAMLError as e:
         raise ValueError(f"Error parsing YAML file: {e}")
 
