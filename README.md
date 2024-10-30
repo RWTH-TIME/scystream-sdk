@@ -114,7 +114,7 @@ python3 -m venv .venv
 
 2. Install the package within the venv 
 
-> [!INFO]
+> [!NOTE]
 > This will also install all the install_requirements from the setup.py
 
 ```bash
