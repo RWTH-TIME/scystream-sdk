@@ -10,9 +10,7 @@ entrypoints:
       language:
         description: "The language to use"
         type: "env"
-        env_key: "LANG"
-        optional: True
-        default_value: "de" 
+        optional: False
       text_data:
         description: "Text file. Can be uploaded by the user."
         type: "file"
@@ -22,17 +20,15 @@ entrypoints:
         description: "Information in a database"
         type: "db_table"
         env_key: "DATA_TABLE_NAME"
-        table_name: "nlp_information"
         optional: True
     outputs:
       topic_model:
         type: "file"
         description: "Topic model file"
         env_key: "OUTPUT_PATH_TOPIC_MODEL"
-        file_path: "outputs/output.pkl"
+        file_path: "test/test.pkj"
       run_durations:
         type: "db_table"
-        description: "Table that contains the run durations per day."
         env_key: "RUN_DURATIONS_TABLE_NAME"
         table_name: "run_durations_nlp"
 
@@ -50,3 +46,4 @@ entrypoints:
         description: "A csv containing statistical information"
         env_key: "CSV_OUTPUT_PATH"
         file_path: "outputs/statistics.csv"
+

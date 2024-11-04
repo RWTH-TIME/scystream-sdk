@@ -18,11 +18,6 @@ class TestComputeBlockValidation(unittest.TestCase):
             load_config("missing_entrypoints.yaml",
                         config_path=self.TEST_CONFIG_FOLDER)
 
-    def test_missing_table_name_for_spark_table(self):
-        with self.assertRaises(ValueError):
-            load_config("missing_table_name.yaml",
-                        config_path=self.TEST_CONFIG_FOLDER)
-
     def test_invalid_datatypes(self):
         with self.assertRaises(ValueError):
             load_config("invalid_datatype.yaml",
@@ -37,14 +32,14 @@ class TestComputeBlockValidation(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             load_config("test.yaml")
 
-    def test_optional_invalid_default(self):
-        with self.assertRaises(TypeError):
-            load_config("optional_invalid_default.yaml",
+    def test_optional_default_not_set(self):
+        with self.assertRaises(ValueError):
+            load_config("optional_default_not_set.yaml",
                         config_path=self.TEST_CONFIG_FOLDER)
 
-    def test_optional_no_default(self):
+    def test_optional_env_key_not_set(self):
         with self.assertRaises(ValueError):
-            load_config("optional_no_default.yaml",
+            load_config("optional_env_key_not_set.yaml",
                         config_path=self.TEST_CONFIG_FOLDER)
 
 

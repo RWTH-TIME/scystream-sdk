@@ -1,5 +1,5 @@
-name: "The first Web-Crawler"
-description: "This is a web crawler, it crawls text..."
+name: "NLP toolbox"
+description: "Contains NLP algorithms..."
 author: "John Doe"
-# Missing `entrypoints` field, which should cause validation to fail.
+docker_image: "https://ghcr.io/nlp-toolbox"
 

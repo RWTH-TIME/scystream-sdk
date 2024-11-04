@@ -46,35 +46,58 @@ It shows the entrypoints, their inputs and outputs.
 This is an example `cbc.yaml`:
 
 ```yaml
-name: "The first Web-Crawler"
-description: "This is a web crawler, it crawls text..."
+name: "NLP toolbox"
+description: "Contains NLP algorithms..."
 author: "John Doe"
+docker_image: "https://ghcr.io/nlp-toolbox"
 
 entrypoints:
-  crawl:
-    description: "Crawl text from specified URLs"
+  topic_modelling:
+    description: "Run topic modelling"
     inputs:
-      url_list:
-        type: "list"
-        item_type: "string"
-        description: "List of URLs to crawl. Can be defined by the user."
-    outputs:
+      language:
+        description: "The language to use"
+        type: "env"
+        env_key: "LANG"
+        optional: True
+        default_value: "de" 
       text_data:
-        type: "spark_table"
-        description: "Crawled text data in a spark table"
-        table_name: "text_data_spark"
-
-  analyze_url:
-    description: "Analyzes if data is crawlable"
-    inputs:
-      url-list:
-        type: "list"
-        item_type: "string"
-        description: "List of URLS to check"
+        description: "Text file. Can be uploaded by the user."
+        type: "file"
+        env_key: "TXT_SRC_PATH"
+        optional: False
+      db_data:
+        description: "Information in a database"
+        type: "db_table"
+        env_key: "DATA_TABLE_NAME"
+        table_name: "nlp_information"
+        optional: True
     outputs:
-      was_sucess:
-        type: "bool"
-        description: "True if all urls can be crawled"
+      topic_model:
+        type: "file"
+        description: "Topic model file"
+        env_key: "OUTPUT_PATH_TOPIC_MODEL"
+        file_path: "outputs/output.pkl"
+      run_durations:
+        type: "db_table"
+        description: "Table that contains the run durations per day."
+        env_key: "RUN_DURATIONS_TABLE_NAME"
+        table_name: "run_durations_nlp"
+
+  analyze_runtime:
+    description: "Analyze the runtimes"
+    inputs:
+      run_durations:
+        type: "db_table"
+        env_key: "RUN_DURATIONS_TABLE_NAME"
+        table_name: "run_durations_nlp"
+        optional: True
+    outputs:
+      csv_output:
+        type: "file"
+        description: "A csv containing statistical information"
+        env_key: "CSV_OUTPUT_PATH"
+        file_path: "outputs/statistics.csv"
 ```
 
 To read and validate such a config file u can proceed as follows:

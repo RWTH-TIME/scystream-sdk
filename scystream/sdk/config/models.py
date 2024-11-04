@@ -1,67 +1,149 @@
-from typing import Optional, Dict, Literal, Any, Callable
+from typing import Optional, Dict, Literal, Union
 from pydantic import BaseModel, StrictStr, field_validator, Field
 
 """
 This file contains the schema definition for the config file.
 """
 
-STRING_TYPE = "string"
-INT_TYPE = "int"
-FLOAT_TYPE = "float"
-BOOL_TYPE = "bool"
-LIST_TYPE = "list"
-SPARK_TABLE_TYPE = "spark_table"
 
-DataTypes = Literal[STRING_TYPE, INT_TYPE, FLOAT_TYPE,
-                    BOOL_TYPE, LIST_TYPE, SPARK_TABLE_TYPE]
-
-VALIDATORS: Dict[DataTypes, Callable[[Any], bool]] = {
-    STRING_TYPE: lambda v: isinstance(v, str),
-    INT_TYPE: lambda v: isinstance(v, str),
-    FLOAT_TYPE: lambda v: isinstance(v, float),
-    BOOL_TYPE: lambda v: isinstance(v, bool),
-    LIST_TYPE: lambda v: isinstance(v, list),
-    # SPARK_TABLE_TYPE should be the name of the spark table (str)
-    SPARK_TABLE_TYPE: lambda v: isinstance(v, str)
-}
-
-
-class BaseIOModel(BaseModel):
-    type: DataTypes
+class BaseInputModel(BaseModel):
     description: Optional[StrictStr] = None
+    optional: bool = False
+    env_key: Optional[StrictStr] = Field(
+        default=None, validate_default=True,
+        description="The env_key describes the key of the environment variable\
+                which can be set to override the default value"
+    )
 
-
-class InputDefinitions(BaseIOModel):
-    optional: bool
-    default_value: Optional[Any] = Field(default=None, validate_default=True)
-
-    @field_validator("default_value")
-    def validate_default_value(cls, v, info):
+    @field_validator("env_key")
+    def validate_env_key(cls, v, info):
+        """a
+        If optional == False, the env_key must be set! As the user must have
+        the possibility to define the variable.
+        """
         optional = info.data.get("optional")
-        expected_type = info.data.get("type")
 
-        if not optional:
-            # If field is not optional, default_value does not have to be set
-            return v
-
-        if v is None:
-            raise ValueError("default_value must be set when optional is True")
-
-        validator = VALIDATORS.get(expected_type)
-        if validator and not validator(v):
-            raise TypeError(f"default_value must be of type {expected_type}")
+        if not optional and v is None:
+            raise ValueError("If optional is False, the env_key must be set.")
 
         return v
 
 
-class OutputDefinitions(BaseIOModel):
-    pass
+class EnvInput(BaseInputModel):
+    """
+    The EnvInput type describes the input of an ENV variable
+    It should describe one env-variable the compute unit accesses.
+
+    The default_value can be overridden, if the env_key is set.
+    """
+    type: Literal["env"]
+    default_value: Optional[StrictStr] = Field(
+        default=None, validate_default=True)
+
+    @field_validator("default_value")
+    def validate_default_value(cls, v, info):
+        """
+        If optional == True, default_value must be set!
+        """
+        optional = info.data.get("optional")
+
+        if optional and v is None:
+            raise ValueError("If optional is True, default_value must be set.")
+
+        return v
+
+
+class FileInput(BaseInputModel):
+    """
+    The FileInput type describes the input for files.
+    The file_path describes the path to a file on the S3 bucket,
+    it can be overriden by using the env_key, if set.
+
+    This makes sense, if a user should be able to manually upload
+    files the compute units wants to access. It does not know the
+    path to the file while writing the defintion.
+    """
+    type: Literal["file"]
+    file_path: Optional[StrictStr] = Field(
+        default=None, validate_default=True,
+        description="The default value of the FileInput type.\
+                Can be overriden."
+    )
+
+    @field_validator("file_path")
+    def validate_file_path(cls, v, info):
+        """
+        If optional == True, file_path must be set!
+        """
+
+        optional = info.data.get("optional")
+
+        if optional and v is None:
+            raise ValueError("If optional is True, file_path must be set.")
+
+
+class BaseOutputModel(BaseModel):
+    description: StrictStr
+    env_key: StrictStr = Field(
+        description="The env_key describes the key of the environment variable\
+                which can be set to override the default value"
+    )
+
+
+class FileOutput(BaseOutputModel):
+    """
+    The FileOutput type describes the output of a file.
+    The file_path describes the path to a file on the S3 bucket.
+    """
+    type: Literal["file"]
+    file_path: StrictStr = Field(
+        desscription="The path to the file on the S3 bucket."
+    )
+
+
+class DBTableOutput(BaseOutputModel):
+    """
+    The DBTableOutput type defines a table that provides output data.
+    The table_name refers to the output table name.
+    """
+    type: Literal["db_table"]
+    table_name: StrictStr = Field(
+        description="The name of the output database table."
+    )
+
+
+class DBTableInput(BaseInputModel):
+    """
+    The DBTableInput type defines a table that provides input data.
+    The table_name can be overriden by using the env_key, if set.
+
+    This makes sense, if a previous compute units output db_table should
+    be used as an input. This table_name is then not known while writing the
+    definition.
+    """
+    type: Literal["db_table"]
+    table_name: Optional[StrictStr] = Field(
+        default=None, validate_default=True,
+        description="The default value of the DBTableInput type.\
+                Can be overriden."
+    )
+
+    @field_validator("table_name")
+    def validate_table_name(cls, v, info):
+        """
+        If optional == True, table_name must be set!
+        """
+
+        optional = info.data.get("optional")
+
+        if optional and v is None:
+            raise ValueError("If optional is True, table_name must be set.")
 
 
 class Entrypoint(BaseModel):
     description: StrictStr
-    inputs: Dict[StrictStr, InputDefinitions]
-    outputs: Dict[StrictStr, OutputDefinitions]
+    inputs: Dict[StrictStr, Union[EnvInput, FileInput, DBTableInput]]
+    outputs: Dict[StrictStr, Union[FileInput, DBTableOutput]]
 
 
 class ComputeBlock(BaseModel):
