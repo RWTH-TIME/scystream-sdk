@@ -11,19 +11,20 @@ entrypoints:
         type: "list"
         description: "List of URLs to crawl. Can be defined by the user."
         optional: True
-        default_value: ["test", "1234"]
+        default_value: "a string"
     outputs:
       text_data:
         type: "spark_table"
         description: "Crawled text data in a spark table"
+        table_name: "text_data_spark"
+        optional: False
 
   analyze_url:
     description: "Analyzes if data is crawlable"
     inputs:
-      url_list:
+      url-list:
         type: "list"
         description: "List of URLS to check"
-        optional: False
     outputs:
       was_sucess:
         type: "bool"

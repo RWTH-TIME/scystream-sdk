@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Literal
+from typing import Optional, Dict, Literal, Any, Callable
 from pydantic import BaseModel, StrictStr, field_validator, Field
 
 """
@@ -15,35 +15,53 @@ SPARK_TABLE_TYPE = "spark_table"
 DataTypes = Literal[STRING_TYPE, INT_TYPE, FLOAT_TYPE,
                     BOOL_TYPE, LIST_TYPE, SPARK_TABLE_TYPE]
 
+VALIDATORS: Dict[DataTypes, Callable[[Any], bool]] = {
+    STRING_TYPE: lambda v: isinstance(v, str),
+    INT_TYPE: lambda v: isinstance(v, str),
+    FLOAT_TYPE: lambda v: isinstance(v, float),
+    BOOL_TYPE: lambda v: isinstance(v, bool),
+    LIST_TYPE: lambda v: isinstance(v, list),
+    # SPARK_TABLE_TYPE should be the name of the spark table (str)
+    SPARK_TABLE_TYPE: lambda v: isinstance(v, str)
+}
 
-class InputOutputDefinitions(BaseModel):
+
+class BaseIOModel(BaseModel):
     type: DataTypes
     description: Optional[StrictStr] = None
-    item_type: Optional[DataTypes] = Field(
-        None, description="Type of items in the list")
-    table_name: Optional[StrictStr] = Field(
-        None, description="Name of the spark_table,\
-                required if type is spark_table", validate_default=True)
-    # TODO: Add an optional example field, this could be very helpful for the
-    # frontend
 
-    """
-    If the type is spark_table, table_name must also be set
-    """
-    @field_validator("table_name")
-    def validate_table_name(cls, v, info):
-        set_type = info.data.get("type")
-        if set_type == "spark_table":
-            if not v:
-                raise ValueError(
-                    "table_name must be set when type is 'spark_table'")
+
+class InputDefinitions(BaseIOModel):
+    optional: bool
+    default_value: Optional[Any] = Field(default=None, validate_default=True)
+
+    @field_validator("default_value")
+    def validate_default_value(cls, v, info):
+        optional = info.data.get("optional")
+        expected_type = info.data.get("type")
+
+        if not optional:
+            # If field is not optional, default_value does not have to be set
+            return v
+
+        if v is None:
+            raise ValueError("default_value must be set when optional is True")
+
+        validator = VALIDATORS.get(expected_type)
+        if validator and not validator(v):
+            raise TypeError(f"default_value must be of type {expected_type}")
+
         return v
+
+
+class OutputDefinitions(BaseIOModel):
+    pass
 
 
 class Entrypoint(BaseModel):
     description: StrictStr
-    inputs: Dict[StrictStr, InputOutputDefinitions]
-    outputs: Dict[StrictStr, InputOutputDefinitions]
+    inputs: Dict[StrictStr, InputDefinitions]
+    outputs: Dict[StrictStr, OutputDefinitions]
 
 
 class ComputeBlock(BaseModel):
@@ -51,6 +69,7 @@ class ComputeBlock(BaseModel):
     description: StrictStr
     author: StrictStr
     entrypoints: Dict[StrictStr, Entrypoint]
+    docker_image: Optional[StrictStr]
 
     @field_validator("entrypoints")
     def check_entrypoints(cls, v):
