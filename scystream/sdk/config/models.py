@@ -9,15 +9,15 @@ This file contains the schema definition for the config file.
 class BaseInputModel(BaseModel):
     description: Optional[StrictStr] = None
     optional: bool = False
-    env_key: Optional[StrictStr] = Field(
-        default=None, validate_default=True,
+    env_key: StrictStr = Field(
+        validate_default=True,
         description="The env_key describes the key of the environment variable\
                 which can be set to override the default value"
     )
 
     @field_validator("env_key")
     def validate_env_key(cls, v, info):
-        """a
+        """
         If optional == False, the env_key must be set! As the user must have
         the possibility to define the variable.
         """
