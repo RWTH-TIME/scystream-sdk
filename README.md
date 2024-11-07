@@ -13,17 +13,23 @@ pip install scystream-sdk
 ```python3
 from scystream.sdk.core import entrypoint
 from scystream.sdk.scheduler import Scheduler
+from scystream.sdk.env.settings import BaseENVSettings
 
+class ExampleTaskSettings(BaseENVSettings):
+    LANGUAGE: str = "tester123"
 
-@entrypoint
-def example_task():
+@entrypoint(ExampleTaskSettings)
+def example_task(settings):
+    print(f"The language {settings.LANGUAGE} is currently set in Settings.")
     print("Executing example_task...")
 
+class AnotherTaskSettings(BaseENVSettings):
+    TXT_SRC_PATH: str = "test/textdatei.txt"
 
-@entrypoint
-def another_task(task_name):
+@entrypoint(AnotherTaskSettings)
+def another_task(settings, task_name):
+    print(f"Saving a file to {settings.TXT_SRC_PATH}...")
     print(f"Executing another_task with task name: {task_name}")
-
 
 def main():
     Scheduler.list_entrypoints()
@@ -34,6 +40,39 @@ def main():
 if __name__ == "__main__":
     main()
 
+```
+
+### Settings
+
+Each entrypoint has so called `Settings` which inherit from `BaseENVSettings`.
+
+These classes are used to define environment variables that the SDK reads and injects
+into entrypoint functions.
+This is required, as we want to be able to configure the behaviour of the Compute Block entrypoint
+to a certain degree from the outside.
+
+In the `cbc.yaml` the SDKs developer defines inputs and outputs of entrypoints (or where these inputs come from).
+All of these inputs and outputs have a env_key (read more in the next section).
+
+The Compute Block developer therefore MUST define all of the env_keys he uses in the corresponding 
+inputs and outputs as well in the Settings which he passes to the `@entrypoint` decorator.
+(TODO: This will be validated)
+
+Of course, the Settings of an entrypoint can also contain ENV-Variables that are not listed
+in the inputs/outputs of the `cbc.yaml`. This could make sense if the ComputeBlock developer
+wants to use ENV-Variables which will not be changed from the outside.
+
+#### Usage of Settings elsewhere
+
+As just described, usage of Settings when defining the entrypoints is mandatory.
+
+Howerver when using Settings elsewhere you can import your `YourCustomSettings` class
+(that inherits from `BaseENVSettings`) and load and validate the variables using
+
+```python3
+from wherever import YourCustomSettings
+
+custom_settings = YourCustomSettings.load_settings()
 ```
 
 ### Compute Block Config Files

@@ -1,15 +1,30 @@
 import functools
 
+from typing import Callable, Type
+from .env.settings import BaseENVSettings
+from pydantic import ValidationError
+
 _registered_functions = {}
 
 
-def entrypoint(func):
-    """Decorator to mark a function as an entrypoint."""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    _registered_functions[func.__name__] = func
-    return wrapper
+def entrypoint(settings_class: Type[BaseENVSettings]):
+    """
+    Decorator to mark a function as an entrypoint.
+    It also loads and injects the settings of the entrypoint.
+    """
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Load settings
+            try:
+                settings = settings_class.load_settings()
+            except ValidationError as e:
+                raise ValueError(f"Invalid environment configuration: {e}")
+
+            return func(settings, *args, **kwargs)
+        _registered_functions[func.__name__] = wrapper
+        return wrapper
+    return decorator
 
 
 def get_registered_functions():
