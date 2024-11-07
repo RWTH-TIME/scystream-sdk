@@ -32,16 +32,6 @@ class TestComputeBlockValidation(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             load_config("test.yaml")
 
-    def test_optional_default_not_set(self):
-        with self.assertRaises(ValueError):
-            load_config("optional_default_not_set.yaml",
-                        config_path=self.TEST_CONFIG_FOLDER)
-
-    def test_optional_env_key_not_set(self):
-        with self.assertRaises(ValueError):
-            load_config("optional_env_key_not_set.yaml",
-                        config_path=self.TEST_CONFIG_FOLDER)
-
 
 if __name__ == "__main__":
     unittest.main()

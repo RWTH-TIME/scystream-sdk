@@ -6,45 +6,36 @@ docker_image: "https://ghcr.io/nlp-toolbox"
 entrypoints:
   topic_modelling:
     description: "Run topic modelling"
-    inputs:
-      language:
-        description: "The language to use"
-        type: "invalid_type"
-        env_key: "LANG"
-        optional: True
-        default_value: "de"
+    envs:
+      LANG: "de"
+    inputs: 
       text_data:
-        description: "Text file. Can be uploaded by the user."
-        type: "file"
-        env_key: "TXT_SRC_PATH"
-        optional: False
+        description: "Text file. Must be uploaded by the user."
+        type: "invalid_type"
+        config:
+          TXT_SRC_PATH: null
       db_data:
         description: "Information in a database"
         type: "db_table"
-        env_key: "DATA_TABLE_NAME"
-        optional: True
+        config:
+          DATA_TABLE_NAME: "test_db_table"
     outputs:
       topic_model:
         type: "file"
         description: "Topic model file"
-        env_key: "OUTPUT_PATH_TOPIC_MODEL"
-        # Missing file_path here will trigger validation error
+        config:
+          OUTPUT_PATH_TOPIC_MODEL: null
       run_durations:
         type: "db_table"
-        env_key: "RUN_DURATIONS_TABLE_NAME"
-        table_name: "run_durations_nlp"
+        config:
+          DURATIONS_TABLE_NAME: "run_durations_table"
 
   analyze_runtime:
     description: "Analyze the runtimes"
     inputs:
       run_durations:
-        type: "db_table"
-        env_key: "RUN_DURATIONS_TABLE_NAME"
-        table_name: "run_durations_nlp"
-        optional: True
+        type: "db_table" 
     outputs:
       csv_output:
         type: "file"
-        description: "A csv containing statistical information"
-        env_key: "CSV_OUTPUT_PATH"
-        file_path: "outputs/statistics.csv"
+        description: "A csv containing statistical information" 
