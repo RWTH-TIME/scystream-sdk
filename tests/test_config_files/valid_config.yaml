@@ -19,6 +19,8 @@ entrypoints:
         type: "db_table"
         config:
           DATA_TABLE_NAME: "nlp_information"
+          DB_HOST: "time.rwth-aachen.de"
+          DB_PORT: 1234
     outputs:
       topic_model:
         type: "file"

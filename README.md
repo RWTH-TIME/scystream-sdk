@@ -54,50 +54,47 @@ docker_image: "https://ghcr.io/nlp-toolbox"
 entrypoints:
   topic_modelling:
     description: "Run topic modelling"
+    envs:
+      LANGUAGE: "de"
     inputs:
-      language:
-        description: "The language to use"
-        type: "env"
-        env_key: "LANG"
-        optional: True
-        default_value: "de" 
       text_data:
         description: "Text file. Can be uploaded by the user."
         type: "file"
-        env_key: "TXT_SRC_PATH"
-        optional: False
+        config:
+          TXT_SRC_PATH: null
       db_data:
         description: "Information in a database"
         type: "db_table"
-        env_key: "DATA_TABLE_NAME"
-        table_name: "nlp_information"
-        optional: True
+        config:
+          DATA_TABLE_NAME: "nlp_information"
+          DB_HOST: "time.rwth-aachen.de"
+          DB_PORT: 1234
     outputs:
       topic_model:
         type: "file"
         description: "Topic model file"
-        env_key: "OUTPUT_PATH_TOPIC_MODEL"
-        file_path: "outputs/output.pkl"
+        config:
+          OUTPUT_PATH_TOPIC_MODEL: null
       run_durations:
         type: "db_table"
         description: "Table that contains the run durations per day."
-        env_key: "RUN_DURATIONS_TABLE_NAME"
-        table_name: "run_durations_nlp"
+        config:
+          RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
 
   analyze_runtime:
     description: "Analyze the runtimes"
     inputs:
       run_durations:
+        description: "Teble that contains all runtimes and dates"
         type: "db_table"
-        env_key: "RUN_DURATIONS_TABLE_NAME"
-        table_name: "run_durations_nlp"
-        optional: True
+        config:
+          RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
     outputs:
       csv_output:
         type: "file"
         description: "A csv containing statistical information"
-        env_key: "CSV_OUTPUT_PATH"
-        file_path: "outputs/statistics.csv"
+        config:
+          CSV_OUTPUT_PATH: "outputs/statistics.csv"
 ```
 
 To read and validate such a config file u can proceed as follows:

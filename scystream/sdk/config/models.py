@@ -1,5 +1,6 @@
-from typing import Optional, Dict, Literal
-from pydantic import BaseModel, StrictStr, field_validator, Field
+from typing import Optional, Dict, Literal, Union
+from pydantic import BaseModel, StrictStr, field_validator, Field, \
+    StrictInt, StrictFloat
 
 FILE_TYPE_IDENTIFIER = "file"
 DB_TABLE_TYPE_IDENTIFIER = "db_table"
@@ -12,9 +13,13 @@ This file contains the schema definition for the config file.
 class InputOutputModel(BaseModel):
     type: Literal[FILE_TYPE_IDENTIFIER, DB_TABLE_TYPE_IDENTIFIER]
     description: Optional[StrictStr] = None
-    config: Optional[Dict[StrictStr, Optional[StrictStr]]] = Field(
-        default=None,
-        description="The configuration for the input values\
+    config: Optional[
+        Dict[
+            StrictStr,
+            Optional[Union[StrictStr, StrictInt, StrictFloat]]
+        ]] = Field(
+            default=None,
+            description="The configuration for the input values\
                 (file_path, table_name, etc.)"
     )
 
