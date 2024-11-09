@@ -21,6 +21,8 @@ entrypoints:
           DATA_TABLE_NAME: "nlp_information"
           DB_HOST: "time.rwth-aachen.de"
           DB_PORT: 1234
+          TXT_SRC_PATH: ["test.txt", "hi.txt"] # for testing purposes
+          IS_INDEXED: True
     outputs:
       topic_model:
         type: "file"

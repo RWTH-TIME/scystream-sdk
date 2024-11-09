@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Literal, Union
+from typing import Optional, Dict, Literal, Union, List
 from pydantic import BaseModel, StrictStr, field_validator, Field, \
     StrictInt, StrictFloat
 
@@ -28,7 +28,7 @@ class InputOutputModel(BaseModel):
     config: Optional[
         Dict[
             StrictStr,
-            Optional[Union[StrictStr, StrictInt, StrictFloat]]
+            Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]]
         ]] = Field(
             default=None,
             description="The configuration for the input values\
@@ -53,8 +53,12 @@ class Entrypoint(BaseModel):
     the process will fail.
     """
     description: StrictStr
-    envs: Optional[Dict[StrictStr, StrictStr]
-                   ] = None  # Todo can be set to Null
+    envs: Optional[
+        Dict[
+            StrictStr,
+            Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]]
+        ]
+    ] = None
     inputs: Dict[StrictStr, InputOutputModel]
     outputs: Dict[StrictStr, InputOutputModel]
 
