@@ -39,7 +39,7 @@ entrypoints:
     description: "Analyze the runtimes"
     inputs:
       run_durations:
-        description: "Teble that contains all runtimes and dates"
+        description: "Table that contains all runtimes and dates"
         type: "db_table"
         config:
           RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"

@@ -8,40 +8,27 @@ You can install the package via pip once it's published:
 pip install scystream-sdk
 ```
 
-## Usage
+### Compute Blocks and their configs
+One of the central concepts of scystream are the so-called **Compute Blocks**.
 
-```python3
-from scystream.sdk.core import entrypoint
-from scystream.sdk.scheduler import Scheduler
+A Compute Block describes an independent programm, that acts as some kind of worker
+which will be scheduled using the scystream-core application.
+This worker executes a task (e.g. a NLP task, a crwaling task).
 
+Each worker can have multiple entrypoints, each aiming to solve one task.
+These entrypoints can be configured from the outside using the **Settings**.
+These are basically ENV-Variables, which will be parsed & validated using pydantic.
 
-@entrypoint
-def example_task():
-    print("Executing example_task...")
+This SDK aims to implement helper functions and other requirements we expect each
+Compute Block to have.
 
+To understand the concept of such a Compute Block even more, take a look at the
+config below.
 
-@entrypoint
-def another_task(task_name):
-    print(f"Executing another_task with task name: {task_name}")
-
-
-def main():
-    Scheduler.list_entrypoints()
-    Scheduler.execute_function("example_task")
-    Scheduler.execute_function("another_task", "ScheduledTask")
-
-
-if __name__ == "__main__":
-    main()
-
-```
-
-### Compute Block Config Files
 We expect every repository which will be used within the scystream application
-to contain a `Compute Block Config File`, the `cbc.yaml`, within the root directory.
-
-This yaml-file describes the compute block itself.
-It shows the entrypoints, their inputs and outputs.
+to contain a **Compute Block Config File**, the `cbc.yaml`, within the root directory.
+This `cbc.yaml` will be used to define the entrypoints, the inputs & outputs each
+Compute Block offers, necessary for the scystream-frontend to understand.
 
 This is an example `cbc.yaml`:
 
@@ -85,7 +72,7 @@ entrypoints:
     description: "Analyze the runtimes"
     inputs:
       run_durations:
-        description: "Teble that contains all runtimes and dates"
+        description: "Table that contains all runtimes and dates"
         type: "db_table"
         config:
           RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
@@ -97,7 +84,10 @@ entrypoints:
           CSV_OUTPUT_PATH: "outputs/statistics.csv"
 ```
 
-To read and validate such a config file u can proceed as follows:
+For now, you have to write this config file on your own. However, at some
+point you will be able to generate this config from your code.
+
+To read and validate such a config file you can proceed as follows:
 
 ```python3
 from scystream.sdk.config.config_loader import load_config 
@@ -121,15 +111,86 @@ load_config(config_file_name="test.yaml", config_path="configs/")
 
 the `config_path` is the path relative to your root directory
 
+## Basic Usage of the SDK
+
+```python3
+from scystream.sdk.core import entrypoint
+from scystream.sdk.scheduler import Scheduler
+
+
+@entrypoint
+def example_task():
+    print("Executing example_task...")
+
+
+@entrypoint
+def another_task(task_name):
+    print(f"Executing another_task with task name: {task_name}")
+
+
+def main():
+    Scheduler.list_entrypoints()
+    Scheduler.execute_function("example_task")
+    Scheduler.execute_function("another_task", "ScheduledTask")
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+## Defining Settings and Using them.
+
+Earlier, we already wrote about **Settings**.
+Each Input & Output can be configured using these settings.
+There are also Global Settings, refered to as `envs` in the `cbc.yaml`
+
+Below you can find a simple example of how we define & validate these settings.
+Therefore you should use the `BaseENVSettings` class.
+
+```python3
+from scystream.sdk.core import entrypoint
+from scystream.sdk.env.settings import BaseENVSettings
+
+class GlobalSettings(BaseENVSettings):
+    LANGUAGE: str = "de"
+
+class TopicModellingEntrypointSettings(BaseENVSettings):
+    TXT_SRC_PATH: str # if no default provided, setting this ENV manually is a MUST
+
+@entrypoint(TopicModellingEntrypointSettings) # Pass it to the Entrypoint
+def topic_modelling(settings):
+    print(f"Running topic modelling, using file: {settings.TXT_SRC_PATH}")
+
+@entrypoint
+def test_entrypint():
+    print("This entrypoint does not have any configs.")
+```
+
+We recommend defining your `GlobalSettings` in an extra file and "exporting" the loaded
+Settings to make them accessible to other files.
+See an example below:
+
+```python3
+from scystream.sdk.env.settings import BaseENVSettings
+
+class GlobalSettings(BaseENVSettings):
+    LANGUAGE: str = "de"
+
+GLOBAL_SETTINGS = GlobalSettings.load_settings()
+```
+
+You can then use the loaded `GLOBAL_SETTINGS` in your other files, by importing them.
 
 ## Development of the SDK
 
 ### Installation
 
-1. Create a venv
+1. Create a venv and use it
 
 ```bash
 python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 2. Install the package within the venv 

@@ -4,7 +4,7 @@ from scystream.sdk.core import entrypoint, get_registered_functions
 
 class TestEntrypoint(unittest.TestCase):
     def test_entrypoint_registration(self):
-        @entrypoint
+        @entrypoint()
         def dummy_function():
             return "Hello"
 
