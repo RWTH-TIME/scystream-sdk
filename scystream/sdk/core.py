@@ -18,7 +18,7 @@ def entrypoint(settings_class: Optional[Type[BaseENVSettings]] = None):
             if settings_class is not None:
                 # Load settings
                 try:
-                    settings = settings_class.load_settings()
+                    settings = settings_class.from_env()
                 except ValidationError as e:
                     raise ValueError(f"Invalid environment configuration: {e}")
 
