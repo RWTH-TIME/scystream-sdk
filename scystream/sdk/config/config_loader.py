@@ -7,6 +7,18 @@ from .models import ComputeBlock
 CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
 
 
+def _remove_empty_dicts(data):
+    """
+    Remove keys with empty dictionaries from a nested structure.
+    """
+    if isinstance(data, dict):
+        return {k: _remove_empty_dicts(v) for k, v in data.items() if v != {}}
+    elif isinstance(data, list):
+        return [_remove_empty_dicts(i) for i in data]
+    else:
+        return data
+
+
 def load_config(
     config_file_name: str = CONFIG_FILE_DEFAULT_NAME,
     config_path: Union[str, Path] = None
@@ -18,9 +30,20 @@ def load_config(
     try:
         file = _find_and_load_config(config_file_name, config_path)
         block = ComputeBlock(**file)
+        # TODO: Check if envs && input/output configs correspond to the
+        # loaded one
         return block
     except ValidationError as e:
         raise ValueError(f"Configuration file validation error: {e}")
+
+
+def generate_yaml_from_compute_block(
+    compute_block: ComputeBlock,
+    output_path: Path
+):
+    cleaned_data = _remove_empty_dicts(compute_block.dict())
+    with output_path.open("w") as file:
+        yaml.dump(cleaned_data, file, default_flow_style=False)
 
 
 def _find_and_load_config(

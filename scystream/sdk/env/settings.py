@@ -72,3 +72,19 @@ class EnvSettings(BaseSettings):
         if propagate_kwargs:
             kwargs = self._propagate_kwargs(propagate_kwargs)
         super().__init__(*args, **kwargs)
+
+
+class InputSettings(EnvSettings):
+    """
+    Abstraction-Layer for inputs
+    could be extended
+    """
+    pass
+
+
+class OutputSettings(EnvSettings):
+    """
+    Abstraction-Layer for outputs
+    could be exended
+    """
+    pass

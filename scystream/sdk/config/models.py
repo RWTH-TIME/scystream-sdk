@@ -4,6 +4,8 @@ from pydantic import BaseModel, StrictStr, field_validator, Field, \
 
 FILE_TYPE_IDENTIFIER = "file"
 DB_TABLE_TYPE_IDENTIFIER = "db_table"
+# TODO: reevaluate the identifier
+TODO_TYPE_IDENTIFIER = "TODO: SetType"
 
 """
 This file contains the schema definition for the config file.
@@ -23,7 +25,8 @@ class InputOutputModel(BaseModel):
     If a value is explicitly set to `null`, validation will fail unless the
     ENV-Variable is manually set by the ComputeBlock user.
     """
-    type: Literal[FILE_TYPE_IDENTIFIER, DB_TABLE_TYPE_IDENTIFIER]
+    type: Literal[FILE_TYPE_IDENTIFIER,
+                  DB_TABLE_TYPE_IDENTIFIER, TODO_TYPE_IDENTIFIER]
     description: Optional[StrictStr] = None
     config: Optional[
         Dict[
@@ -59,8 +62,8 @@ class Entrypoint(BaseModel):
             Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]]
         ]
     ] = None
-    inputs: Dict[StrictStr, InputOutputModel]
-    outputs: Dict[StrictStr, InputOutputModel]
+    inputs: Optional[Dict[StrictStr, InputOutputModel]] = None
+    outputs: Optional[Dict[StrictStr, InputOutputModel]] = None
 
 
 class ComputeBlock(BaseModel):

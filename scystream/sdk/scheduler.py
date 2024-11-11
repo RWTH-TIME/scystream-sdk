@@ -13,6 +13,6 @@ class Scheduler:
     def execute_function(name, *args, **kwargs):
         functions = get_registered_functions()
         if name in functions:
-            return functions[name](*args, **kwargs)
+            return functions[name]["function"](*args, **kwargs)
         else:
             raise Exception(f"No entrypoint found with the name: {name}")
