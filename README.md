@@ -118,12 +118,12 @@ from scystream.sdk.core import entrypoint
 from scystream.sdk.scheduler import Scheduler
 
 
-@entrypoint
+@entrypoint()
 def example_task():
     print("Executing example_task...")
 
 
-@entrypoint
+@entrypoint()
 def another_task(task_name):
     print(f"Executing another_task with task name: {task_name}")
 
@@ -146,34 +146,38 @@ Each Input & Output can be configured using these settings.
 There are also Global Settings, refered to as `envs` in the `cbc.yaml`
 
 Below you can find a simple example of how we define & validate these settings.
-Therefore you should use the `BaseENVSettings` class.
+Therefore you should use the `EnvSettings` class.
 
 ```python3
 from scystream.sdk.core import entrypoint
-from scystream.sdk.env.settings import BaseENVSettings
+from scystream.sdk.env.settings import EnvSettings
 
-class TextDataInputSettings(BaseENVSettings):
+class TextDataInputSettings(EnvSettings):
     TXT_SRC_PATH: str # no default provided, manual setting is a MUST
 
-class DBDataInputSettings(BaseENVSettings):
+class DBDataInputSettings(EnvSettings):
     DATA_TABLE_NAME: str = "nlp_information"
     DB_HOST: str = "time.rwth-aachen.de"
     DB_PORT: str = 1234
 
-class TopicModellingEntrypointSettings(BaseENVSettings):
+class TopicModellingEntrypointSettings(EnvSettings):
     LANGUAGE: str = "de"
     
     text_data: TextDataInputSettings
     db_data:  DBDataInputSettings
 
 @entrypoint(TopicModellingEntrypointSettings) # Pass it to the Entrypoint
-def topic_modelling(settings):
+def topic_modelling(settings): # The settings param is automatically injected to your function, you can use it
     print(f"Running topic modelling, using file: {settings.text_data.TXT_SRC_PATH}")
 
-@entrypoint
+@entrypoint()
 def test_entrypint():
     print("This entrypoint does not have any configs.")
 ```
+
+Of course, you will also be able to use your settings in other files/directories.
+For that, just import your desired setting and use the `get_settings()` function.
+It will load the configurations correctly.
 
 ## Development of the SDK
 

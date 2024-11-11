@@ -1,46 +1,46 @@
 import unittest
 import os
 from scystream.sdk.core import entrypoint
-from scystream.sdk.env.settings import BaseENVSettings
+from scystream.sdk.env.settings import EnvSettings
 from scystream.sdk.scheduler import Scheduler
 
 
-class DummyInputSettings(BaseENVSettings):
+class DummyInputSettings(EnvSettings):
     DUMMY_INPUT: str = "test"
 
 
-class WithDefaultSettings(BaseENVSettings):
+class WithDefaultSettings(EnvSettings):
     DUMMY_GLOBAL: str = "dummy global var"
 
     dummy_input_settings: DummyInputSettings
 
 
-class DummyInputSettingsNoDef(BaseENVSettings):
+class DummyInputSettingsNoDef(EnvSettings):
     DUMMY_INPUT: str
 
 
-class WithoutDefaultSettings(BaseENVSettings):
+class WithoutDefaultSettings(EnvSettings):
     DUMMY_GLOBAL: str
 
     dummy_input_settings_no_def: DummyInputSettingsNoDef
 
 
-class WithoutDefaultNoNesting(BaseENVSettings):
+class WithoutDefaultNoNesting(EnvSettings):
     TEST: str = "teststr"
     MUST_SET: str
 
 
-class SubOne(BaseENVSettings):
+class SubOne(EnvSettings):
     ONE: str
     TWO: str
 
 
-class SubTwo(BaseENVSettings):
+class SubTwo(EnvSettings):
     TEST: str
     NO_DEF: str
 
 
-class TwoSubclasses(BaseENVSettings):
+class TwoSubclasses(EnvSettings):
     GLOBAL: str
 
     input_one: SubOne

@@ -6,7 +6,7 @@ from pydantic import Field
 ENV_FILE_ENCODING = "utf-8"
 
 
-class BaseENVSettings(BaseSettings):
+class EnvSettings(BaseSettings):
     """
     Allow kwargs to propagate to any fields whose default factory extends
     BaseSettings,
@@ -50,6 +50,10 @@ class BaseENVSettings(BaseSettings):
         for name, field_type in sub_settings.items():
             kwargs[name] = field_type(**kwargs)
         return kwargs
+
+    @classmethod
+    def get_settings(cls):
+        return cls.from_env(env_file=".env")
 
     def __init_subclass__(cls, **kwargs):
         """
