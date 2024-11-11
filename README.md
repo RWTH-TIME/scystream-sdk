@@ -152,35 +152,28 @@ Therefore you should use the `BaseENVSettings` class.
 from scystream.sdk.core import entrypoint
 from scystream.sdk.env.settings import BaseENVSettings
 
-class GlobalSettings(BaseENVSettings):
-    LANGUAGE: str = "de"
+class TextDataInputSettings(BaseENVSettings):
+    TXT_SRC_PATH: str # no default provided, manual setting is a MUST
+
+class DBDataInputSettings(BaseENVSettings):
+    DATA_TABLE_NAME: str = "nlp_information"
+    DB_HOST: str = "time.rwth-aachen.de"
+    DB_PORT: str = 1234
 
 class TopicModellingEntrypointSettings(BaseENVSettings):
-    TXT_SRC_PATH: str # if no default provided, setting this ENV manually is a MUST
+    LANGUAGE: str = "de"
+    
+    text_data: TextDataInputSettings
+    db_data:  DBDataInputSettings
 
 @entrypoint(TopicModellingEntrypointSettings) # Pass it to the Entrypoint
 def topic_modelling(settings):
-    print(f"Running topic modelling, using file: {settings.TXT_SRC_PATH}")
+    print(f"Running topic modelling, using file: {settings.text_data.TXT_SRC_PATH}")
 
 @entrypoint
 def test_entrypint():
     print("This entrypoint does not have any configs.")
 ```
-
-We recommend defining your `GlobalSettings` in an extra file and "exporting" the loaded
-Settings to make them accessible to other files.
-See an example below:
-
-```python3
-from scystream.sdk.env.settings import BaseENVSettings
-
-class GlobalSettings(BaseENVSettings):
-    LANGUAGE: str = "de"
-
-GLOBAL_SETTINGS = GlobalSettings.load_settings()
-```
-
-You can then use the loaded `GLOBAL_SETTINGS` in your other files, by importing them.
 
 ## Development of the SDK
 
