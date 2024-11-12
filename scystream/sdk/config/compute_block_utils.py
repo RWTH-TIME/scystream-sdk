@@ -1,10 +1,10 @@
+from typing import Union
 from pydantic_core import PydanticUndefinedType
 from scystream.sdk.config.models import ComputeBlock, Entrypoint, \
     InputOutputModel
 from scystream.sdk.env.settings import InputSettings, \
     OutputSettings
-from typing import Union
-from scystream.sdk.core import get_registered_functions
+from scystream.sdk.config.entrypoints import get_registered_functions
 
 
 def _get_pydantic_default_value_or_none(value):
@@ -58,9 +58,9 @@ def get_compute_block() -> ComputeBlock:
 
         entrypoints[entrypoint] = Entrypoint(
             description="<tbd>",
-            envs=envs,
-            inputs=inputs,
-            outputs=outputs
+            envs=envs if envs != {} else None,
+            inputs=inputs if inputs != {} else None,
+            outputs=outputs if outputs != {} else None
         )
 
     return ComputeBlock(

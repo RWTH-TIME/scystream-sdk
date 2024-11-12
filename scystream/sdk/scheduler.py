@@ -1,4 +1,5 @@
-from .core import get_registered_functions
+from scystream.sdk.config.entrypoints import get_registered_functions
+from scystream.sdk.config.config_loader import validate_config_with_code
 
 
 class Scheduler:
@@ -11,6 +12,12 @@ class Scheduler:
 
     @staticmethod
     def execute_function(name, *args, **kwargs):
+        """
+        Validate the in code defined entrypoints
+        with the settings defined in the cfg file
+        """
+        validate_config_with_code(entrypoint_name=name)
+
         functions = get_registered_functions()
         if name in functions:
             return functions[name]["function"](*args, **kwargs)

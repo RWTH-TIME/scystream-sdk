@@ -2,47 +2,58 @@ import yaml
 from typing import Union
 from pydantic import ValidationError
 from pathlib import Path
-from .models import ComputeBlock
+from scystream.sdk.config.models import ComputeBlock, Entrypoint, \
+    InputOutputModel
 from scystream.sdk.config.compute_block_utils import get_compute_block
 
 CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
 
 
-def _remove_empty_dicts(data):
+def _compare_configs(
+        config_from_yaml: Union[ComputeBlock, Entrypoint, InputOutputModel],
+        config_from_code: Union[ComputeBlock, Entrypoint, InputOutputModel],
+        name="block"
+):
     """
-    Remove keys with empty dictionaries from a nested structure.
+    Compares two configurations and raises a ValueError if they don't match.
     """
-    if isinstance(data, dict):
-        return {k: _remove_empty_dicts(v) for k, v in data.items() if v != {}}
-    elif isinstance(data, list):
-        return [_remove_empty_dicts(i) for i in data]
+    if config_from_yaml != config_from_code:
+        raise ValueError(
+            f"The {name} configs (envs, inputs, outputs) defined\
+            in your config YAML do not match the settings defined\
+            in your code."
+        )
+
+
+def validate_config_with_code(
+        config_file_name: str = CONFIG_FILE_DEFAULT_NAME,
+        config_path: Union[str, Path] = None,
+        entrypoint_name: str = None
+):
+    block_from_cfg = load_config(config_file_name, config_path)
+    block_from_code = get_compute_block()
+
+    if entrypoint_name:
+        _compare_configs(
+            block_from_cfg.entrypoints[entrypoint_name],
+            block_from_code.entrypoints[entrypoint_name]
+        )
     else:
-        return data
+        _compare_configs(block_from_cfg, block_from_code)
 
 
-def load_and_validate_config(
+def load_config(
     config_file_name: str = CONFIG_FILE_DEFAULT_NAME,
     config_path: Union[str, Path] = None,
 ) -> ComputeBlock:
     """
-    Returns and Validates the Compute Block YAML definition.
-    Returns a ComputeBlock instance if the validation is successfull
+    Returns the Compute Block defined by the passed yaml.
+    Returns a ComputeBlock instance if the syntax-validation is successfull
     """
     try:
         file = _find_and_load_config(config_file_name, config_path)
         block_from_cfg = ComputeBlock(**file)
-        block_from_code = get_compute_block()
-
-        if (
-            block_from_cfg != block_from_code
-        ):
-            # check the total config
-            raise ValueError(
-                "The entrypoint configs (envs, inputs, outputs) defined in "
-                "your config yaml do not correspond with the entrypoint "
-                "settings defined in your code."
-            )
-        return block_from_code
+        return block_from_cfg
     except ValidationError as e:
         raise ValueError(f"Configuration file validation error: {e}")
 
@@ -51,9 +62,8 @@ def generate_config_from_compute_block(
     compute_block: ComputeBlock,
     output_path: Path
 ):
-    cleaned_data = _remove_empty_dicts(compute_block.dict())
     with output_path.open("w") as file:
-        yaml.dump(cleaned_data, file, default_flow_style=False)
+        yaml.dump(compute_block.dict(), file, default_flow_style=False)
 
 
 def _find_and_load_config(

@@ -1,9 +1,8 @@
 import functools
 from typing import Callable, Type, Optional
-from scystream.sdk.env.settings import EnvSettings
 from pydantic import ValidationError
-
-_registered_functions = {}
+from scystream.sdk.config.entrypoints import register_entrypoint
+from scystream.sdk.env.settings import EnvSettings
 
 
 def entrypoint(settings_class: Optional[Type[EnvSettings]] = None):
@@ -15,8 +14,7 @@ def entrypoint(settings_class: Optional[Type[EnvSettings]] = None):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if settings_class is not None:
-                # TODO: validate the entrypoint settings with the config yaml
-
+                # Load the settings
                 try:
                     # load the settings
                     settings = settings_class.get_settings()
@@ -28,14 +26,6 @@ def entrypoint(settings_class: Optional[Type[EnvSettings]] = None):
             else:
                 return func(*args, **kwargs)
 
-        _registered_functions[func.__name__] = {
-            "function": wrapper,
-            "settings": settings_class
-        }
+        register_entrypoint(func.__name__, wrapper, settings_class)
         return wrapper
     return decorator
-
-
-def get_registered_functions():
-    """Returns a dictionary of registered entrypoint functions."""
-    return _registered_functions
