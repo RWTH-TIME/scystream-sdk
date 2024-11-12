@@ -79,7 +79,6 @@ class InputSettings(EnvSettings):
     Abstraction-Layer for inputs
     could be extended
     """
-    pass
 
 
 class OutputSettings(EnvSettings):
@@ -87,4 +86,3 @@ class OutputSettings(EnvSettings):
     Abstraction-Layer for outputs
     could be exended
     """
-    pass

@@ -10,7 +10,7 @@ class TestEntrypoint(unittest.TestCase):
 
         registered = get_registered_functions()
         self.assertIn("dummy_function", registered)
-        self.assertEqual(registered["dummy_function"](), "Hello")
+        self.assertEqual(registered["dummy_function"]["function"](), "Hello")
 
 
 if __name__ == "__main__":

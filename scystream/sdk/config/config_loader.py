@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import ValidationError
 from pathlib import Path
 from .models import ComputeBlock
+from scystream.sdk.config.compute_block_utils import get_compute_block
 
 CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
 
@@ -19,9 +20,9 @@ def _remove_empty_dicts(data):
         return data
 
 
-def load_config(
+def load_and_validate_config(
     config_file_name: str = CONFIG_FILE_DEFAULT_NAME,
-    config_path: Union[str, Path] = None
+    config_path: Union[str, Path] = None,
 ) -> ComputeBlock:
     """
     Returns and Validates the Compute Block YAML definition.
@@ -29,15 +30,24 @@ def load_config(
     """
     try:
         file = _find_and_load_config(config_file_name, config_path)
-        block = ComputeBlock(**file)
-        # TODO: Check if envs && input/output configs correspond to the
-        # loaded one
-        return block
+        block_from_cfg = ComputeBlock(**file)
+        block_from_code = get_compute_block()
+
+        if (
+            block_from_cfg != block_from_code
+        ):
+            # check the total config
+            raise ValueError(
+                "The entrypoint configs (envs, inputs, outputs) defined in "
+                "your config yaml do not correspond with the entrypoint "
+                "settings defined in your code."
+            )
+        return block_from_code
     except ValidationError as e:
         raise ValueError(f"Configuration file validation error: {e}")
 
 
-def generate_yaml_from_compute_block(
+def generate_config_from_compute_block(
     compute_block: ComputeBlock,
     output_path: Path
 ):
