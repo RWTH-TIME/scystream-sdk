@@ -9,6 +9,31 @@ from scystream.sdk.config.compute_block_utils import get_compute_block
 CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
 
 
+class SDKConfig:
+    """
+    This is a singleton class that holds the configuration of
+    the sdk.
+    For now, it only holds the config_path which points to
+    the cbc.yaml.
+    """
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(SDKConfig, cls).__new__(cls)
+            cls._instance.config_path = CONFIG_FILE_DEFAULT_NAME
+        return cls._instance
+
+    def set_config_path(self, config_path: str):
+        self.config_path = config_path
+
+    def get_config_path(self) -> str:
+        return self.config_path
+
+
+global_config = SDKConfig()
+
+
 def _compare_configs(
         config_from_yaml: Union[ComputeBlock, Entrypoint, InputOutputModel],
         config_from_code: Union[ComputeBlock, Entrypoint, InputOutputModel],
@@ -26,11 +51,9 @@ def _compare_configs(
 
 
 def validate_config_with_code(
-        config_file_name: str = CONFIG_FILE_DEFAULT_NAME,
-        config_path: Union[str, Path] = None,
         entrypoint_name: str = None
 ):
-    block_from_cfg = load_config(config_file_name, config_path)
+    block_from_cfg = load_config()
     block_from_code = get_compute_block()
 
     if entrypoint_name:
@@ -42,16 +65,13 @@ def validate_config_with_code(
         _compare_configs(block_from_cfg, block_from_code)
 
 
-def load_config(
-    config_file_name: str = CONFIG_FILE_DEFAULT_NAME,
-    config_path: Union[str, Path] = None,
-) -> ComputeBlock:
+def load_config() -> ComputeBlock:
     """
     Returns the Compute Block defined by the passed yaml.
     Returns a ComputeBlock instance if the syntax-validation is successfull
     """
     try:
-        file = _find_and_load_config(config_file_name, config_path)
+        file = _find_and_load_config()
         block_from_cfg = ComputeBlock(**file)
         return block_from_cfg
     except ValidationError as e:
@@ -66,19 +86,14 @@ def generate_config_from_compute_block(
         yaml.dump(compute_block.dict(), file, default_flow_style=False)
 
 
-def _find_and_load_config(
-        config_file_name: str,
-        config_path: Union[str, Path] = None
-):
+def _find_and_load_config():
     """
     Loads the compute block config YAML from the projects root directory
     returns the loaded file
     """
-    base_path = Path.cwd()
-    if config_path:
-        base_path /= Path(config_path)
+    config_path = global_config.get_config_path()
 
-    full_path = base_path / config_file_name
+    full_path = Path.cwd() / config_path
 
     if not full_path.is_file():
         raise FileNotFoundError(

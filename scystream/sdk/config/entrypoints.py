@@ -10,3 +10,7 @@ def register_entrypoint(func_name, func, settings_class):
 
 def get_registered_functions():
     return _registered_functions
+
+
+def TEST_reset_registered_functions():
+    _registered_functions.clear()

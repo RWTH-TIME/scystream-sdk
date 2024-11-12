@@ -1,8 +1,13 @@
 import unittest
-from scystream.sdk.core import entrypoint, get_registered_functions
+from scystream.sdk.core import entrypoint
+from scystream.sdk.config.entrypoints import get_registered_functions
+from scystream.sdk.config.entrypoints import TEST_reset_registered_functions
 
 
 class TestEntrypoint(unittest.TestCase):
+    def tearDown(self):
+        TEST_reset_registered_functions()
+
     def test_entrypoint_registration(self):
         @entrypoint()
         def dummy_function():
