@@ -83,7 +83,7 @@ def generate_config_from_compute_block(
     output_path: Path
 ):
     with output_path.open("w") as file:
-        yaml.dump(compute_block.dict(), file, default_flow_style=False)
+        yaml.dump(compute_block.model_dump(), file, default_flow_style=False)
 
 
 def _find_and_load_config():

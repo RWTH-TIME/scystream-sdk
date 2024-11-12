@@ -1,6 +1,6 @@
 import unittest
-from scystream.sdk.config.config_loader import load_config, \
-    ComputeBlock, global_config
+from scystream.sdk.config import global_config, load_config
+from scystream.sdk.config.models import ComputeBlock
 
 
 class TestComputeBlockValidation(unittest.TestCase):

@@ -1,5 +1,5 @@
 from scystream.sdk.config.entrypoints import get_registered_functions
-from scystream.sdk.config.config_loader import validate_config_with_code
+from scystream.sdk.config import validate_config_with_code
 
 
 class Scheduler:

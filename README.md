@@ -161,8 +161,7 @@ After writing the functionality of your ComputeBlock (see more below) you can ge
 the corresponding `cbc.yaml` by using the following function:
 
 ```python3
-from scystream.sdk.config.config_loader import generate_config_from_compute_block
-from scystream.sdk.config.compute_block_utils import get_compute_block
+from scystream.sdk.config import generate_config_from_compute_block, get_compute_block
 from pathlib import Path
 
 @entrypoint()
@@ -182,6 +181,17 @@ This will take all the entrypoints, their defined settings, and generate a confi
 
 ### Validating a config
 
+If you want your `cbc.yaml` to be located in a different directory or have a different name, you
+have to configure that accordingly:
+
+```python3
+from scystream.sdk.config import global_config
+
+if __name__ == "__main__":
+    # Set the config_path
+    global_config.set_config_path("custom_dir/custom_name.yaml")
+```
+
 Of course, you can also write the config completely on your own.
 
 > [!NOTE]
@@ -192,7 +202,7 @@ Of course, you can also write the config completely on your own.
 To validate the config, you can also use a helper function like this:
 
 ```python3
-from scystream.sdk.config.config_loader import validate_config_with_code
+from scystream.sdk.config import validate_config_with_code
 
 @entrypoint()
 def example_entrypoint():

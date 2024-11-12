@@ -4,9 +4,12 @@ from scystream.sdk.core import entrypoint
 from scystream.sdk.env.settings import EnvSettings, InputSettings, \
     OutputSettings
 from scystream.sdk.scheduler import Scheduler
-from scystream.sdk.config.config_loader import global_config
-from scystream.sdk.config.config_loader import validate_config_with_code
+from scystream.sdk.config.config_loader import global_config, \
+    validate_config_with_code, get_compute_block, \
+    generate_config_from_compute_block
 from scystream.sdk.config.entrypoints import TEST_reset_registered_functions
+from pathlib import Path
+import yaml
 
 # Validate Cfgs
 
@@ -43,6 +46,35 @@ class TestSettings(unittest.TestCase):
 
     def tearDown(self):
         TEST_reset_registered_functions()
+
+    def test_generate_config_from_code(self):
+        generated_config_path = Path(f"{self.TEST_SETTINGS_FILES}/gen.yaml")
+        reference_config_path = Path(f"{self.TEST_SETTINGS_FILES}/ref.yaml")
+
+        @entrypoint(SimpleSettings)
+        def example_entrypoint(settings):
+            print("Running...")
+
+        try:
+            cb = get_compute_block()
+            generate_config_from_compute_block(
+                cb, generated_config_path)
+        except Exception as e:
+            self.fail(f"Exception raised unexpectedly: {e}")
+
+        with generated_config_path.open("r") as gen_file:
+            generated_yaml = yaml.safe_load(gen_file)
+
+        with reference_config_path.open("r") as ref_file:
+            reference_yaml = yaml.safe_load(ref_file)
+
+        # Compare the contents
+        self.assertEqual(
+            generated_yaml, reference_yaml,
+            "Generated YAML does not match the reference YAML"
+        )
+
+        generated_config_path.unlink()
 
     def test_entrypoint_yaml_cfg_different_to_code_cfg(self):
         # Tests if the passed settings to entrypoint config is different
