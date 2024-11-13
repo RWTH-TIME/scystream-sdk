@@ -1,0 +1,5 @@
+name: "NLP toolbox"
+description: "Contains NLP algorithms..."
+author: "John Doe"
+docker_image: "https://ghcr.io/nlp-toolbox"
+

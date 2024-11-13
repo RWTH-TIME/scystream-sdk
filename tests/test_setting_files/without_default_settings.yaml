@@ -1,0 +1,15 @@
+name: <tbs>
+author: <tbs>
+description: <tbs>
+docker_image: <tbs>
+entrypoints:
+  without_def_settings:
+    description: <tbd>
+    envs:
+      LANGUAGE: null
+    inputs:
+      input_one:
+        config:
+          TEST: null
+        description: <to-be-set>
+        type: 'TODO: SetType'
