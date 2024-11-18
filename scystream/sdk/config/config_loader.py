@@ -7,6 +7,9 @@ from scystream.sdk.config.models import ComputeBlock, Entrypoint, \
 from scystream.sdk.config.compute_block_utils import get_compute_block
 
 CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
+UNNAMED_APP_NAME = "unnamed_compute_block"
+# TODO: is that right? Is ComputeBlock in Docker Network?
+COMPUTE_BLOCK_SPARK_DEFAULT_MASTER = "spark://spark-master:7077"
 
 
 class SDKConfig:
@@ -18,10 +21,17 @@ class SDKConfig:
     """
     _instance = None
 
-    def __new__(cls):
+    def __new__(
+        cls,
+        config_path: str = CONFIG_FILE_DEFAULT_NAME,
+        app_name: str = UNNAMED_APP_NAME,
+        cb_spark_master: str = COMPUTE_BLOCK_SPARK_DEFAULT_MASTER
+    ):
         if cls._instance is None:
             cls._instance = super(SDKConfig, cls).__new__(cls)
-            cls._instance.config_path = CONFIG_FILE_DEFAULT_NAME
+            cls._instance.config_path = config_path
+            cls._instance.app_name = app_name
+            cls._instance.cb_spark_master = cb_spark_master
         return cls._instance
 
     def set_config_path(self, config_path: str):
@@ -29,9 +39,6 @@ class SDKConfig:
 
     def get_config_path(self) -> str:
         return self.config_path
-
-
-global_config = SDKConfig()
 
 
 def _compare_configs(
@@ -91,7 +98,8 @@ def _find_and_load_config():
     Loads the compute block config YAML from the projects root directory
     returns the loaded file
     """
-    config_path = global_config.get_config_path()
+    sdk_cfg = SDKConfig()
+    config_path = sdk_cfg.get_config_path()
 
     full_path = Path.cwd() / config_path
 

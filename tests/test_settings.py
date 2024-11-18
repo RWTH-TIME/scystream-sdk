@@ -1,15 +1,16 @@
+import yaml
+from pathlib import Path
+from scystream.sdk.config.entrypoints import TEST_reset_registered_functions
 import unittest
 import os
 from scystream.sdk.core import entrypoint
 from scystream.sdk.env.settings import EnvSettings, InputSettings, \
     OutputSettings
 from scystream.sdk.scheduler import Scheduler
-from scystream.sdk.config.config_loader import global_config, \
+from scystream.sdk.config.config_loader import \
     validate_config_with_code, get_compute_block, \
     generate_config_from_compute_block
-from scystream.sdk.config.entrypoints import TEST_reset_registered_functions
-from pathlib import Path
-import yaml
+from scystream.sdk.config import SDKConfig
 
 # Validate Cfgs
 
@@ -43,6 +44,7 @@ class WithoutDefaults(EnvSettings):
 
 class TestSettings(unittest.TestCase):
     TEST_SETTINGS_FILES = "tests/test_setting_files/"
+    global_config = SDKConfig()
 
     def tearDown(self):
         TEST_reset_registered_functions()
@@ -83,7 +85,7 @@ class TestSettings(unittest.TestCase):
         def example_entrypoint(settings):
             print("Running example_entrypoint...")
 
-        global_config.set_config_path(
+        self.global_config.set_config_path(
             f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_inv.yaml"
         )
 
@@ -98,7 +100,7 @@ class TestSettings(unittest.TestCase):
         def example_entrypoint(settings):
             print("Running example_entrypoint...")
 
-        global_config.set_config_path(
+        self.global_config.set_config_path(
             f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_v.yaml"
         )
 
@@ -114,7 +116,7 @@ class TestSettings(unittest.TestCase):
         def example_entrypoint(settings):
             print(f"{settings}....")
 
-        global_config.set_config_path(
+        self.global_config.set_config_path(
             f"{self.TEST_SETTINGS_FILES}/simple_cfg.yaml")
 
         try:
@@ -130,7 +132,7 @@ class TestSettings(unittest.TestCase):
         def example_entrypoint(settings):
             print(f"{settings}....")
 
-        global_config.set_config_path(
+        self.global_config.set_config_path(
             f"{self.TEST_SETTINGS_FILES}/simple_cfg_invalid.yaml")
 
         with self.assertRaises(ValueError):
@@ -143,7 +145,7 @@ class TestSettings(unittest.TestCase):
         def with_default_settings(settings):
             return settings.input_one.TEST
 
-        global_config.set_config_path(
+        self.global_config.set_config_path(
             f"{self.TEST_SETTINGS_FILES}/simple_cfg.yaml")
 
         result = with_default_settings()
@@ -163,7 +165,7 @@ class TestSettings(unittest.TestCase):
         def without_def_settings(settings):
             print("test...")
 
-        global_config.set_config_path(
+        self.global_config.set_config_path(
             f"{self.TEST_SETTINGS_FILES}/without_default_settings.yaml")
 
         # do we fail if environments not set

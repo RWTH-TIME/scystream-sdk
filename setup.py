@@ -14,7 +14,8 @@ setup(
     install_requires=[
         "pydantic>=2.9.2",
         "PyYAML>=6.0.2",
-        "pydantic-settings>=2.6.1"
+        "pydantic-settings>=2.6.1",
+        "pyspark>=3.5.3"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
