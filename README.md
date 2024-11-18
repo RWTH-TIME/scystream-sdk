@@ -170,7 +170,7 @@ def example_entrypoint():
 
 if __name__ == "__main__":
     compute_block = get_compute_block()
-    generate_config_from_compute_block(cb, Path("cbc.yaml"))
+    generate_config_from_compute_block(compute_block, Path("cbc.yaml"))
 ```
 
 This will take all the entrypoints, their defined settings, and generate a config from them.
