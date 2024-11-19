@@ -13,7 +13,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "scystream.sdk": ["spark_jars/postgresql-42.7.4.jar"]
+        "scystream.sdk": [
+            "spark_jars/postgresql-42.7.4.jar",
+        ]
     },
     install_requires=[
         "pydantic>=2.9.2",

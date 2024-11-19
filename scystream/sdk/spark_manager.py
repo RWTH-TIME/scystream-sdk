@@ -1,7 +1,6 @@
 import pkg_resources
 from pyspark.sql import SparkSession
 from scystream.sdk.config import SDKConfig
-from scystream.sdk.file_handling.s3_manager import S3Config, S3Operations
 from scystream.sdk.database_handling.postgres_manager import \
     PostgresConfig, PostgresOperations
 
@@ -14,6 +13,15 @@ class SparkManager:
             "scystream.sdk", "spark_jars/postgresql-42.7.4.jar"
         )
 
+        """
+        When starting the ComputeBlock using Apache Sparks DockerOperator
+        we need to make sure, to start the container in the same network
+        as the spark-worker and the spark-master.
+        Else, the spark jobs will not be executed correctly.
+        """
+        # TODO: Do not connect to master in development!!!
+        # TODO: Default connect to our master in prod!!!
+        # (? maybe users should be able to override)
         self.session = SparkSession.builder \
             .master(self.config.cb_spark_master) \
             .appName(self.config.app_name) \
@@ -22,9 +30,6 @@ class SparkManager:
 
     def setup_pg(self, config: PostgresConfig):
         return PostgresOperations(self.session, config)
-
-    def setup_s3(self, config: S3Config):
-        return S3Operations(self.session, config)
 
     def stop_session(self):
         if self.spark:
