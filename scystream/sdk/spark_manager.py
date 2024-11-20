@@ -19,9 +19,6 @@ class SparkManager:
         as the spark-worker and the spark-master.
         Else, the spark jobs will not be executed correctly.
         """
-        # TODO: Do not connect to master in development!!!
-        # TODO: Default connect to our master in prod!!!
-        # (? maybe users should be able to override)
         self.session = SparkSession.builder \
             .master(self.config.cb_spark_master) \
             .appName(self.config.app_name) \
