@@ -17,8 +17,7 @@ class S3Operations():
     ):
         self.boto_client = boto3.client(
             "s3",
-            endpoint_url=f"{config.endpoint}:{
-                config.port}",
+            endpoint_url=f"{config.endpoint}:{config.port}",
             aws_access_key_id=config.access_key,
             aws_secret_access_key=config.secret_key,
         )
@@ -35,6 +34,15 @@ class S3Operations():
         bucket_name: str,
         target_name: str
     ):
+        """
+        Uploads a file from a local directory to the specified S3 bucket
+
+        :param path_to_file: Path to the local file.
+        :param bucket_name: The name of the bucket where the file will be
+        uploaded. If the bucket does not already exist, it will be created.
+        :param target_name: The name of the file after uploading.
+        """
+
         # TODO: Validate target_name to be not dangerous/invalid
         self._create_bucket_if_not_exists(bucket_name)
         self.boto_client.upload_file(
@@ -46,5 +54,14 @@ class S3Operations():
         s3_object_name: str,
         local_file_path: str
     ):
+        """
+        Downlaods a file from the specified S3 bucket to a local path.
+
+        :param bucket_name: The bucket from where the file will be downloaded.
+        :param s3_object_name: The name of the file on the S3 bucket, which
+        will be downloaded.
+        :param local_file_path: The path to where the downloaded file will be
+        placed.
+        """
         self.boto_client.download_file(
             bucket_name, s3_object_name, local_file_path)

@@ -8,7 +8,8 @@ from scystream.sdk.config.compute_block_utils import get_compute_block
 
 CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
 UNNAMED_APP_NAME = "unnamed_compute_block"
-# TODO: is that right? Is ComputeBlock in Docker Network?
+# In production, the ComputeBlock must be within the same docker network
+# as the spark-master & workers!
 COMPUTE_BLOCK_SPARK_DEFAULT_MASTER = "spark://spark-master:7077"
 
 
@@ -39,6 +40,9 @@ class SDKConfig:
 
     def get_config_path(self) -> str:
         return self.config_path
+
+    def get_cb_spark_master(self) -> str:
+        return self.cb_spark_master
 
 
 def _compare_configs(
