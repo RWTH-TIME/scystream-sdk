@@ -25,6 +25,13 @@ setup(
         "setuptools>=75.5.0",
         "boto3>=1.35.65"
     ],
+    extras_require={
+        "dev": [
+            "sphinx>=8.1.3",
+            "sphinx-autodoc-typehints>=2.5.0",
+            "sphinxawesome-theme>=5.3.2"
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

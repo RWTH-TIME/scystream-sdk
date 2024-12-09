@@ -232,7 +232,13 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-3. Develop!
+3. Install the dev dependencies
+
+```bash
+pip install -e ".[dev]"
+```
+
+4. Develop!
 
 ### Tests
 
