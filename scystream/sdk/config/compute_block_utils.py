@@ -28,7 +28,8 @@ def _build_input_output_dict_from_class(
 
 def get_compute_block() -> ComputeBlock:
     """
-    Converts Entrypoints & Settings to a ComputeBlock
+    Converts Entrypoints & Settings defined in the Code
+    to a ComputeBlock instance.
     """
     entrypoints = {}
     for entrypoint, func in get_registered_functions().items():
