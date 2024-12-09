@@ -11,7 +11,11 @@ setup(
     author_email="evers@time.rwth-aachen.de",
     license="MIT",
     packages=find_packages(),
-    install_requires=[],
+    install_requires=[
+        "pydantic>=2.9.2",
+        "PyYAML>=6.0.2",
+        "pydantic-settings>=2.6.1"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

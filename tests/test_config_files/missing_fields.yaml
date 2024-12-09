@@ -1,0 +1,42 @@
+name: "NLP toolbox"
+description: "Contains NLP algorithms..."
+author: "John Doe"
+docker_image: "https://ghcr.io/nlp-toolbox"
+
+entrypoints:
+  topic_modelling:
+    envs:
+      LANGUAGE: "de"
+    inputs:
+      text_data:
+        description: "Text file. Can be uploaded by the user."
+        config:
+          TXT_SRC_PATH: null
+      db_data:
+        description: "Information in a database"
+        type: "db_table"
+        config:
+          DATA_TABLE_NAME: "nlp_information"
+    outputs:
+      topic_model:
+        description: "Topic model file"
+        config:
+          OUTPUT_PATH_TOPIC_MODEL: null
+      run_durations:
+        type: "db_table"
+        description: "Table that contains the run durations per day."
+        config:
+          RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
+
+  analyze_runtime:
+    description: "Analyze the runtimes"
+    inputs:
+      run_durations:
+        config:
+          RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
+    outputs:
+      csv_output:
+        type: "file"
+        description: "A csv containing statistical information"
+        config:
+          CSV_OUTPUT_PATH: "outputs/statistics.csv"

@@ -1,0 +1,21 @@
+author: <tbs>
+description: <tbs>
+docker_image: <tbs>
+entrypoints:
+  example_entrypoint:
+    description: <tbd>
+    envs:
+      LANGUAGE: de
+    inputs:
+      input_one:
+        config:
+          TEST: test
+        description: <to-be-set>
+        type: 'TODO: SetType'
+    outputs:
+      output_one:
+        config:
+          OUT: out
+        description: <to-be-set>
+        type: 'TODO: SetType'
+name: <tbs>
