@@ -29,7 +29,8 @@ setup(
         "dev": [
             "sphinx>=8.1.3",
             "sphinx-autodoc-typehints>=2.5.0",
-            "sphinxawesome-theme>=5.3.2"
+            "sphinxawesome-theme>=5.3.2",
+            "Pygments>=2.18.0"
         ]
     },
     classifiers=[

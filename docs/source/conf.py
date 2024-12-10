@@ -41,4 +41,5 @@ exclude_patterns = ['tests', 'scripts']
 
 html_permalinks_icon = '<span>#</span>'
 html_theme = 'sphinxawesome_theme'
-html_static_path = ['_static']
+pygments_style = "sas"
+pygments_style_dark = "github-dark"

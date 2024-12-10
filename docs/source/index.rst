@@ -1,4 +1,4 @@
-Welcome to the scystream-sdk documentation!
+Welcome to the scystream-sdk!
 ===========================================
 
 Contents
