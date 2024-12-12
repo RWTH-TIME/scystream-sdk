@@ -32,5 +32,3 @@ class SparkManager:
         if self.spark:
             self.spark.stop()
             self.spark = None
-            self.file_ops = None
-            self.db_ops = None

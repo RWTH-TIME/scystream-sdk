@@ -7,8 +7,8 @@ setup(
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/RWTH-TIME/scystream-sdk",
-    author="Felix Evers",
-    author_email="evers@time.rwth-aachen.de",
+    author="Felix Evers, Paul Kalhorn",
+    author_email="evers@time.rwth-aachen.de, kalhorn@time.rwth-aachen.de",
     license="MIT",
     packages=find_packages(),
     include_package_data=True,
@@ -25,6 +25,14 @@ setup(
         "setuptools>=75.5.0",
         "boto3>=1.35.65"
     ],
+    extras_require={
+        "dev": [
+            "sphinx>=8.1.3",
+            "sphinx-autodoc-typehints>=2.5.0",
+            "sphinxawesome-theme>=5.3.2",
+            "Pygments>=2.18.0"
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
