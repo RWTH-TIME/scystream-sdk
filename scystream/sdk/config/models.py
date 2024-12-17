@@ -13,13 +13,20 @@ class InputOutputModel(BaseModel):
     Represents configuration for inputs or outputs in a ComputeBlock.
 
     The configuration is defined as a dictionary with key-value pairs, where:
-    - The key is the name of an environment variable (e.., `FILE_PATH`,
-                                                      `TABLE_NAME`).
+
+    - The key is the name of an environment variable (e.g., `FILE_PATH`,
+      `TABLE_NAME`).
+
     - The value is the default value for that environment variable, which can
-    be a string, integer, or float.
+      be a string, integer, or float.
 
     If a value is explicitly set to `null`, validation will fail unless the
-    ENV-Variable is manually set by the ComputeBlock user.
+    environment variable is manually set by the ComputeBlock user.
+
+    :param type: Type of the I/O (file, db_table, TODO: SetType).
+    :param description: A description of the I/O.
+    :param config: A dictionary of configuration settings for
+        the I/O, such as file path, table name, etc.
     """
     type: Literal[FILE_TYPE_IDENTIFIER,
                   DB_TABLE_TYPE_IDENTIFIER, TODO_TYPE_IDENTIFIER]
@@ -46,6 +53,9 @@ class InputOutputModel(BaseModel):
         return False
 
     def _sorted_config(self):
+        """
+        Sorts the configuration dictionary by key for consistent comparison.
+        """
         return dict(sorted(self.config.items() if self.config else {}))
 
 
@@ -55,15 +65,22 @@ class Entrypoint(BaseModel):
 
     An entrypoint includes:
     - A description of the entrypoint's purpose.
+
     - A dictionary of environment variables (`envs`), where each key-value
-    pair represents an environment variable and its default value.
-        - These variables should be shared variables across the entrypoint
-    - Input and output configurations, each described by the
-    `InputOutputModel`.
+      pair represents an environment variable and its default value.
+        - These variables should be shared across the entrypoint.
+
+    - Input and output configurations, each described by the InputOutputModel.
 
     If an environment variable’s value is set to `None` in the configuration,
     the ComputeBlock user must provide that variable during runtime, or else
     the process will fail.
+
+    :param description: A description of the entrypoint.
+    :param envs: A dictionary of environment variables w  their default
+        values.
+    :param inputs: A dictionary of input configurations.
+    :param outputs: A dictionary of output configurations.
     """
     description: StrictStr
     envs: Optional[
@@ -77,8 +94,8 @@ class Entrypoint(BaseModel):
 
     def __eq__(self, other):
         """
-        Compares the envs, inputs, outputs only, as other attributes
-        are not relevant for determining equality at this stage.
+        Compares the `envs`, `inputs`, and `outputs` only, as other
+        attributes are not relevant for determining equality at this stage.
         """
         if isinstance(other, Entrypoint):
             return (
@@ -104,12 +121,22 @@ class ComputeBlock(BaseModel):
     process, including entrypoints, inputs, and outputs.
 
     A ComputeBlock is defined by:
+
     - A name, description, and author.
-    - One or more entrypoints that specify how data is passed into and out of
-    the compute process.
+
+    - One or more entrypoints that specify how data is passed into and out
+      of the compute process.
+
     - Optionally, a Docker image to specify the execution environment.
 
     At least one entrypoint must be defined for the ComputeBlock to be valid.
+
+    :param name: The name of the ComputeBlock.
+    :param description: A description of the ComputeBlock.
+    :param author: The author of the ComputeBlock.
+    :param entrypoints: A dictionary of entrypoints.
+    :param docker_image: The Docker image for the execution
+            environment, if any.
     """
     name: StrictStr
     description: StrictStr
@@ -119,6 +146,12 @@ class ComputeBlock(BaseModel):
 
     @field_validator("entrypoints")
     def check_entrypoints(cls, v):
+        """
+        Validates that at least one entrypoint is defined for the ComputeBlock.
+
+        Raises:
+            ValueError: If no entrypoints are defined.
+        """
         if not v:
             raise ValueError("At least one entrypoint must be defined.")
         return v
