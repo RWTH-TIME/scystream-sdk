@@ -127,59 +127,66 @@ class TestSettings(unittest.TestCase):
         generated_config_path.unlink()
 
     def test_entrypoint_with_identifier_and_env_override(self):
-        """Test if environment variables override settings correctly with 
-        identifiers"""
-        @entrypoint(SettingOtherTypes)
-        def example_entrypoint(settings):
-            # Accessing fields with identifier prefix
-            return (
-                settings.input_one.S3_HOST,
-                settings.input_one.S3_PORT,
-                settings.input_one.S3_ACCESS_KEY,
-                settings.input_one.S3_SECRET_KEY,
-                settings.input_one.BUCKET_NAME,
-                settings.input_one.FILE_PATH,
-                settings.input_one.FILE_NAME,
-                settings.output.PG_USER,
-                settings.output.PG_PASS,
-                settings.output.PG_HOST,
-                settings.output.PG_PORT,
-                settings.output.DB_TABLE,
-            )
+        """Test if environment variables override settings correctly with
+        identifiers."""
 
-        # Set the necessary environment variables with the prefix
-        os.environ["my_file_one_S3_HOST"] = "overridden_host"
-        os.environ["my_file_one_S3_PORT"] = "overridden_port"
-        os.environ["my_file_one_S3_ACCESS_KEY"] = "overridden_access"
-        os.environ["my_file_one_S3_SECRET_KEY"] = "overridden_secret"
-        os.environ["my_file_one_BUCKET_NAME"] = "overridden_bucket"
-        os.environ["my_file_one_FILE_PATH"] = "overridden_file_path"
-        os.environ["my_file_one_FILE_NAME"] = "overridden_file_name"
+        # Set up the environment variables
+        env_vars = {
+            "my_file_one_S3_HOST": "overridden_host",
+            "my_file_one_S3_PORT": "overridden_port",
+            "my_file_one_S3_ACCESS_KEY": "overridden_access",
+            "my_file_one_S3_SECRET_KEY": "overridden_secret",
+            "my_file_one_BUCKET_NAME": "overridden_bucket",
+            "my_file_one_FILE_PATH": "overridden_file_path",
+            "my_file_one_FILE_NAME": "overridden_file_name",
+            "my_pg_PG_USER": "overridden_user",
+            "my_pg_PG_PASS": "overridden_pass",
+            "my_pg_PG_HOST": "overridden_host",
+            "my_pg_PG_PORT": "overridden_port",
+            "my_pg_DB_TABLE": "overridden_table"
+        }
 
-        os.environ["my_pg_PG_USER"] = "overridden_user"
-        os.environ["my_pg_PG_PASS"] = "overridden_pass"
-        os.environ["my_pg_PG_HOST"] = "overridden_host"
-        os.environ["my_pg_PG_PORT"] = "overridden_port"
-        os.environ["my_pg_DB_TABLE"] = "overridden_table"
+        # Set the environment variables
+        for key, value in env_vars.items():
+            os.environ[key] = value
 
         try:
+            @entrypoint(SettingOtherTypes)
+            def example_entrypoint(settings):
+                return (
+                    settings.input_one.S3_HOST,
+                    settings.input_one.S3_PORT,
+                    settings.input_one.S3_ACCESS_KEY,
+                    settings.input_one.S3_SECRET_KEY,
+                    settings.input_one.BUCKET_NAME,
+                    settings.input_one.FILE_PATH,
+                    settings.input_one.FILE_NAME,
+                    settings.output.PG_USER,
+                    settings.output.PG_PASS,
+                    settings.output.PG_HOST,
+                    settings.output.PG_PORT,
+                    settings.output.DB_TABLE,
+                )
+
             result = example_entrypoint()
-            self.assertEqual(result[0], "overridden_host")
-            self.assertEqual(result[1], "overridden_port")
-            self.assertEqual(result[2], "overridden_access")
-            self.assertEqual(result[3], "overridden_secret")
-            self.assertEqual(result[4], "overridden_bucket")
-            self.assertEqual(result[5], "overridden_file_path")
-            self.assertEqual(result[6], "overridden_file_name")
-            self.assertEqual(result[7], "overridden_user")
-            self.assertEqual(result[8], "overridden_pass")
-            self.assertEqual(result[9], "overridden_host")
-            self.assertEqual(result[10], "overridden_port")
-            self.assertEqual(result[11], "overridden_table")
+
+            # Expected values
+            expected_values = [
+                "overridden_host", "overridden_port", "overridden_access",
+                "overridden_secret", "overridden_bucket",
+                "overridden_file_path", "overridden_file_name",
+                "overridden_user", "overridden_pass", "overridden_host",
+                "overridden_port", "overridden_table"
+            ]
+
+            # Assert that the results match expected values
+            for idx, expected in enumerate(expected_values):
+                self.assertEqual(result[idx], expected)
         finally:
-            # Clean up environment variables
-            del os.environ["my_file_one_S3_HOST"]
-            del os.environ["my_file_one_S3_PORT"]
+            # Clean up the environment variables
+            for key in env_vars:
+                if key in os.environ:
+                    del os.environ[key]
 
     def test_entrypoint_yaml_cfg_different_to_code_cfg(self):
         # Tests if the passed settings to entrypoint config is different

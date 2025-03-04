@@ -299,6 +299,8 @@ To interact with a database you have to do the following:
 
 2. Configure your Postgres connection using the :class:`scystream.sdk.database_handling.postgres_manager.PostgresConfig`
 
+   Note: You can also use :class:`scystream.sdk.env.settings.PostgresSettings`
+
 3. Setup Postgres in your Spark Session :meth:`scystream.sdk.spark_manager.SparkManager.setup_pg`
 
 4. Interact with the Database using :mod:`scystream.sdk.database_handling.postgres_manager`!
@@ -354,6 +356,8 @@ Currently, it's *NOT* using Apache Spark for that.
 To interact with a S3 Bucket you have to do the following:
 
 1. Configure the S3 Connection using the :class:`scystream.sdk.file_handling.s3_manager.S3Config`
+
+   Note: You can also use :class:`scystream.sdk.env.settings.FileSettings`
 
 2. Setup the S3 Connection using the :class:`scystream.sdk.file_handling.s3_manager.S3Operations`
 
