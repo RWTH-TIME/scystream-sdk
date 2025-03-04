@@ -12,4 +12,4 @@ entrypoints:
         config:
           TEST: null
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'

@@ -1,0 +1,32 @@
+author: <tbs>
+description: <tbs>
+docker_image: <tbs>
+entrypoints:
+  example_entrypoint:
+    description: <tbd>
+    envs:
+      LANGUAGE: de
+    inputs:
+      input_one:
+        config:
+          my_file_one_BUCKET_NAME: null
+          my_file_one_FILE_NAME: null
+          my_file_one_FILE_PATH: null
+          my_file_one_S3_ACCESS_KEY: null
+          my_file_one_S3_HOST: null
+          my_file_one_S3_PORT: null
+          my_file_one_S3_SECRET_KEY: null
+        description: <to-be-set>
+        type: file
+    outputs:
+      output:
+        config:
+          my_pg_DB_TABLE: null
+          my_pg_EXTENDS: test
+          my_pg_PG_HOST: null
+          my_pg_PG_PASS: null
+          my_pg_PG_PORT: null
+          my_pg_PG_USER: null
+        description: <to-be-set>
+        type: pg_table
+name: <tbs>

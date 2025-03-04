@@ -3,9 +3,8 @@ from pydantic import BaseModel, StrictStr, field_validator, Field, \
     StrictInt, StrictFloat
 
 FILE_TYPE_IDENTIFIER = "file"
-DB_TABLE_TYPE_IDENTIFIER = "db_table"
-# TODO: reevaluate identifier
-TODO_TYPE_IDENTIFIER = "TODO: SetType"
+PG_TABLE_TYPE_IDENTIFIER = "pg_table"
+CUSTOM_TYPE_IDENTIFIER = "custom"
 
 
 class InputOutputModel(BaseModel):
@@ -29,7 +28,7 @@ class InputOutputModel(BaseModel):
         the I/O, such as file path, table name, etc.
     """
     type: Literal[FILE_TYPE_IDENTIFIER,
-                  DB_TABLE_TYPE_IDENTIFIER, TODO_TYPE_IDENTIFIER]
+                  PG_TABLE_TYPE_IDENTIFIER, CUSTOM_TYPE_IDENTIFIER]
     description: Optional[StrictStr] = None
     config: Optional[
         Dict[
@@ -68,7 +67,7 @@ class Entrypoint(BaseModel):
 
     - A dictionary of environment variables (`envs`), where each key-value
       pair represents an environment variable and its default value.
-        - These variables should be shared across the entrypoint.
+    - These variables should be shared across the entrypoint.
 
     - Input and output configurations, each described by the InputOutputModel.
 

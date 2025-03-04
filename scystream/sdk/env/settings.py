@@ -11,19 +11,6 @@ class EnvSettings(BaseSettings):
     A base class for settings that loads and parses configurations
     from environment variables or files and supports nested settings models
     that extend `BaseSettings`.
-
-    This class is designed to allow the propagation of keyword arguments
-    to any fields whose type is a subclass of `BaseSettings`, such as
-    nested settings models. It is primarily used to handle the `_env_file`
-    argument to specify environment files for loading configuration.
-
-    The `model_config` attribute is configured to:
-
-    - Set the encoding of environment files to UTF-8.
-
-    - Make environment variable names case-sensitive.
-
-    - Ignore extra fields that are not defined in the model.
     """
     model_config = SettingsConfigDict(
         env_file_encoding=ENV_FILE_ENCODING,
@@ -41,18 +28,6 @@ class EnvSettings(BaseSettings):
         """
         Create an instance of the settings class from environment files
         or other keyword arguments.
-
-        This method allows environment files to be specified and used to
-        populate the settings.
-
-        :param env_file: The environment file(s) to load from. Can be a
-                          single file path or a list of paths.
-        :param args: Additional positional arguments to pass to the
-            `BaseSettings` constructor.
-        :param kwargs: Additional keyword arguments to pass to the
-            `BaseSettings` constructor.
-        :return: An instance of the settings class with values populated
-                 from the environment files and any additional arguments.
         """
         return cls(propagate_kwargs={"_env_file": env_file}, *args, **kwargs)
 
@@ -66,7 +41,6 @@ class EnvSettings(BaseSettings):
         return {
             name: typ for name, typ in type_hints.items()
             if isinstance(typ, type) and issubclass(typ, BaseSettings)
-
         }
 
     @classmethod
@@ -84,9 +58,6 @@ class EnvSettings(BaseSettings):
         """
         Retrieves the settings instance, loading the configuration from
         the `.env` file.
-
-        :return: An instance of the settings class with values populated
-                 from the `.env` file.
         """
         return cls.from_env(env_file=".env")
 
@@ -120,4 +91,73 @@ class OutputSettings(EnvSettings):
     """
     A subclass of `EnvSettings` that can be extended to define output-related
     settings for a specific use case.
+    """
+
+
+class FileSettings(EnvSettings):
+    """
+    A subclass of `EnvSettings` that should be used to define file inputs
+    and outputs.
+    """
+    S3_HOST: str
+    S3_PORT: str
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    BUCKET_NAME: str
+    FILE_PATH: str
+    FILE_NAME: str
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Enforce __identifier__ for FileSettings subclasses.
+        """
+        super().__init_subclass__(**kwargs)
+        if not hasattr(cls, '__identifier__'):
+            raise TypeError(
+                f"Class {cls.__name__} must define an __identifier__ attribute"
+                "because it inherits from FileSettings"
+            )
+        # Dynamically set the env_prefix based on __identifier__
+        cls.model_config = SettingsConfigDict(
+            env_file_encoding=ENV_FILE_ENCODING,
+            case_sensitive=True,
+            extra="ignore",
+            env_prefix=f"{cls.__identifier__}_"
+        )
+
+
+class PostgresSettings(EnvSettings):
+    """
+    A subclass of `EnvSettings` that should be used to define db_table
+    inputs and outputs located on a postgres db.
+    """
+    PG_USER: str
+    PG_PASS: str
+    PG_HOST: str
+    PG_PORT: str
+    DB_TABLE: str
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Enforce __identifier__ for PostgresSettings subclasses.
+        """
+        super().__init_subclass__(**kwargs)
+        if not hasattr(cls, '__identifier__'):
+            raise TypeError(
+                f"Class {cls.__name__} must define an __identifier__ attribute"
+                "because it inherits from PostgresSettings"
+            )
+        # Dynamically set the env_prefix based on __identifier__
+        cls.model_config = SettingsConfigDict(
+            env_file_encoding=ENV_FILE_ENCODING,
+            case_sensitive=True,
+            extra="ignore",
+            env_prefix=f"{cls.__identifier__}_"
+        )
+
+
+class CustomSettings(EnvSettings):
+    """
+    A subclass of `EnvSettings` that can be extended to define the
+    settings for a custom use case.
     """

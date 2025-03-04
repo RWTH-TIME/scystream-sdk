@@ -12,13 +12,13 @@ entrypoints:
         config:
           TEST: test
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'
     outputs:
       output_one:
         config:
           OUT: out
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'
   again_entrypoint:
     description: <tbd>
     envs:

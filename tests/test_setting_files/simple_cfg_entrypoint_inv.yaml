@@ -13,10 +13,10 @@ entrypoints:
           TEST: test
           ADDITIONAL: tesing # SHOULD FAIL BECAUSE NOT IN SETTINGS CLASS
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'
     outputs:
       output_one:
         config:
           OUT: out
         description: <to-be-set>
-        type: 'TODO: SetType' 
+        type: 'custom' 
