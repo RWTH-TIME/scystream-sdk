@@ -19,3 +19,15 @@ Providing basic functionalities:
 5. Reading & writing to a postgres database, integrating Apache Spark.
 
 6. Reading & writing from/to a S3 bucket, currently not using Apache Spark.
+
+scystream-sdk 1.1.0 - Release Notes
+-----------------------------------
+
+1. Updated ENV settings.
+
+   We have added two predefined classes for postgres and file in- and outputs.
+   
+   These contain default ENV-Keys such as the PG_HOST for defining the host of a postgres
+   in-/ouput or S3_ACCESS_KEY for defining the access key of an S3 Bucket.
+
+   These settings can ultimatively be used to configure the corresponding connections.
