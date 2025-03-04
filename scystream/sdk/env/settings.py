@@ -11,6 +11,19 @@ class EnvSettings(BaseSettings):
     A base class for settings that loads and parses configurations
     from environment variables or files and supports nested settings models
     that extend `BaseSettings`.
+
+    This class is designed to allow the propagation of keyword arguments
+    to any fields whose type is a subclass of `BaseSettings`, such as
+    nested settings models. It is primarily used to handle the `_env_file`
+    argument to specify environment files for loading configuration.
+
+    The `model_config` attribute is configured to:
+
+    - Set the encoding of environment files to UTF-8.
+
+    - Make environment variable names case-sensitive.
+
+    - Ignore extra fields that are not defined in the model.
     """
     model_config = SettingsConfigDict(
         env_file_encoding=ENV_FILE_ENCODING,
@@ -28,6 +41,18 @@ class EnvSettings(BaseSettings):
         """
         Create an instance of the settings class from environment files
         or other keyword arguments.
+
+        This method allows environment files to be specified and used to
+        populate the settings.
+
+        :param env_file: The environment file(s) to load from. Can be a
+                          single file path or a list of paths.
+        :param args: Additional positional arguments to pass to the
+            `BaseSettings` constructor.
+        :param kwargs: Additional keyword arguments to pass to the
+            `BaseSettings` constructor.
+        :return: An instance of the settings class with values populated
+                 from the environment files and any additional arguments.
         """
         return cls(propagate_kwargs={"_env_file": env_file}, *args, **kwargs)
 
@@ -58,6 +83,9 @@ class EnvSettings(BaseSettings):
         """
         Retrieves the settings instance, loading the configuration from
         the `.env` file.
+
+        :return: An instance of the settings class with values populated
+                 from the `.env` file.
         """
         return cls.from_env(env_file=".env")
 
