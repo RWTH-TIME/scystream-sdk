@@ -12,13 +12,13 @@ entrypoints:
         config:
           TEST: test
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'
     outputs:
       output_one:
         config:
           OUT: out
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'
   test_entryping:
     # This entrpoint is not defined in the Settings and passed to the
     # however, as example_entrypoint is beeing calles in the test
@@ -32,4 +32,4 @@ entrypoints:
         config:
           TESTER: test
         description: <to-be-set>
-        type: 'TODO: SetType'
+        type: 'custom'

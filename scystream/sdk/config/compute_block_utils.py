@@ -1,9 +1,10 @@
 from typing import Union
 from pydantic_core import PydanticUndefinedType
 from scystream.sdk.config.models import ComputeBlock, Entrypoint, \
-    InputOutputModel
+    InputOutputModel, FILE_TYPE_IDENTIFIER, PG_TABLE_TYPE_IDENTIFIER, \
+    CUSTOM_TYPE_IDENTIFIER
 from scystream.sdk.env.settings import InputSettings, \
-    OutputSettings
+    OutputSettings, FileSettings, PostgresSettings
 from scystream.sdk.config.entrypoints import get_registered_functions
 
 
@@ -13,14 +14,36 @@ def _get_pydantic_default_value_or_none(value):
     return value.default
 
 
+def _get_io_type(subj: Union[InputSettings, OutputSettings]) -> str:
+    """
+    Determines the type of input/output based on the subject class.
+
+    :param subject: The settings class
+    :return: The determined type ("file", "pg_table", "custom")
+    """
+
+    if issubclass(subj, FileSettings):
+        return FILE_TYPE_IDENTIFIER
+    elif issubclass(subj, PostgresSettings):
+        return PG_TABLE_TYPE_IDENTIFIER
+    return CUSTOM_TYPE_IDENTIFIER
+
+
 def _build_input_output_dict_from_class(
     subject: Union[InputSettings, OutputSettings]
 ):
     config_dict = {}
+    identifier = getattr(subject, "__identifier__", None)
     for key, value in subject.model_fields.items():
-        config_dict[key] = _get_pydantic_default_value_or_none(value)
+        default_value = _get_pydantic_default_value_or_none(value)
+
+        if identifier:
+            key = f"{identifier}_{key}"
+
+        config_dict[key] = default_value
+
     return InputOutputModel(
-        type="TODO: SetType",
+        type=_get_io_type(subject),
         description="<to-be-set>",
         config=config_dict
     )

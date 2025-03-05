@@ -16,7 +16,7 @@ entrypoints:
           TXT_SRC_PATH: null
       db_data:
         description: "Information in a database"
-        type: "db_table"
+        type: "pg_table"
         config:
           DATA_TABLE_NAME: "nlp_information"
           DB_HOST: "time.rwth-aachen.de"
@@ -30,7 +30,7 @@ entrypoints:
         config:
           OUTPUT_PATH_TOPIC_MODEL: null
       run_durations:
-        type: "db_table"
+        type: "pg_table"
         description: "Table that contains the run durations per day."
         config:
           RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
@@ -40,7 +40,7 @@ entrypoints:
     inputs:
       run_durations:
         description: "Table that contains all runtimes and dates"
-        type: "db_table"
+        type: "pg_table"
         config:
           RUN_DURATIONS_TABLE_NAME: "run_durations_nlp"
     outputs:

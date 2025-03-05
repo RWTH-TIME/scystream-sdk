@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from pydantic import BaseModel
+from scystream.sdk.env.settings import PostgresSettings
 
 
 class PostgresConfig(BaseModel):
@@ -10,15 +11,15 @@ class PostgresConfig(BaseModel):
     PostgreSQL database. It includes the database user, password, host, and
     port.
 
-    :param pg_user: The username for the PostgreSQL database.
-    :param pg_pass: The password for the PostgreSQL database.
-    :param pg_host: The host address of the PostgreSQL server.
-    :param pg_port: The port number of the PostgreSQL server.
+    :param PG_USER: The username for the PostgreSQL database.
+    :param PG_PASS: The password for the PostgreSQL database.
+    :param PG_HOST: The host address of the PostgreSQL server.
+    :param PG_PORT: The port number of the PostgreSQL server.
     """
-    pg_user: str
-    pg_pass: str
-    pg_host: str
-    pg_port: int
+    PG_USER: str
+    PG_PASS: str
+    PG_HOST: str
+    PG_PORT: int
 
 
 class PostgresOperations():
@@ -27,16 +28,21 @@ class PostgresOperations():
 
     This class provides methods to read from and write to a PostgreSQL database
     using JDBC and Spark's DataFrame API. It requires a SparkSession and a
-    PostgresConfig object for database connectivity.
+    PostgresConfig object or the PostgresSettings from an input or output for
+    database connectivity.
     """
 
-    def __init__(self, spark: SparkSession, config: PostgresConfig):
+    def __init__(
+            self,
+            spark: SparkSession,
+            config: PostgresConfig | PostgresSettings
+    ):
         self.spark_session = spark
         self.jdbc_url = \
-            f"jdbc:postgresql://{config.pg_host}:{config.pg_port}"
+            f"jdbc:postgresql://{config.PG_HOST}:{config.PG_PORT}"
         self.properties = {
-            "user": config.pg_user,
-            "password": config.pg_pass,
+            "user": config.PG_USER,
+            "password": config.PG_PASS,
             "driver": "org.postgresql.Driver"
         }
 

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 import boto3
 from botocore.client import ClientError
+from scystream.sdk.env.settings import FileSettings
 
 
 class S3Config(BaseModel):
@@ -10,15 +11,15 @@ class S3Config(BaseModel):
     This model holds the necessary parameters to authenticate and connect
     to an S3-compatible service.
 
-    :param access_key: access key for authentication.
-    :param secret_key: secret key for authentication.
-    :param endpoint: The endpoint URL for the S3-compatible service.
-    :param port: The port used by the S3-compatible service.
+    :param S3_ACCESS_KEY: access key for authentication.
+    :param S3_SECRET_KEY: secret key for authentication.
+    :param S3_HOST: The endpoint URL for the S3-compatible service.
+    :param S3_PORT: The port used by the S3-compatible service.
     """
-    access_key: str
-    secret_key: str
-    endpoint: str
-    port: int
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    S3_HOST: str
+    S3_PORT: str
 
 
 class S3Operations():
@@ -32,7 +33,7 @@ class S3Operations():
 
     def __init__(
         self,
-        config: S3Config
+        config: S3Config | FileSettings
     ):
         """
         Initializes the S3 client with the provided configuration.
@@ -42,9 +43,9 @@ class S3Operations():
         """
         self.boto_client = boto3.client(
             "s3",
-            endpoint_url=f"{config.endpoint}:{config.port}",
-            aws_access_key_id=config.access_key,
-            aws_secret_access_key=config.secret_key,
+            endpoint_url=f"{config.S3_HOST}:{config.S3_PORT}",
+            aws_access_key_id=config.S3_ACCESS_KEY,
+            aws_secret_access_key=config.S3_SECRET_KEY,
         )
 
     def _create_bucket_if_not_exists(self, bucket_name: str):

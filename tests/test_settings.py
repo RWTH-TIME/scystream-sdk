@@ -5,7 +5,7 @@ import unittest
 import os
 from scystream.sdk.core import entrypoint
 from scystream.sdk.env.settings import EnvSettings, InputSettings, \
-    OutputSettings
+    OutputSettings, PostgresSettings, FileSettings
 from scystream.sdk.scheduler import Scheduler
 from scystream.sdk.config.config_loader import \
     validate_config_with_code, get_compute_block, \
@@ -21,6 +21,23 @@ class SimpleSettingsInputOne(InputSettings):
 
 class SimpleSettingsOutputOne(OutputSettings):
     OUT: str = "out"
+
+
+class PgTestOutputOne(PostgresSettings, OutputSettings):
+    __identifier__ = "my_pg"
+    EXTENDS: str = "test"
+    pass
+
+
+class FileTestInputOne(FileSettings, InputSettings):
+    __identifier__ = "my_file_one"
+    pass
+
+
+class SettingOtherTypes(EnvSettings):
+    LANGUAGE: str = "de"
+    input_one: FileTestInputOne
+    output: PgTestOutputOne
 
 
 class SimpleSettings(EnvSettings):
@@ -78,9 +95,103 @@ class TestSettings(unittest.TestCase):
 
         generated_config_path.unlink()
 
+    def test_generate_config_file_db_type(self):
+        generated_config_path = Path(
+            f"{self.TEST_SETTINGS_FILES}/gen_more_types.yaml")
+        reference_config_path = Path(
+            f"{self.TEST_SETTINGS_FILES}/ref_more_types.yaml")
+
+        @entrypoint(SettingOtherTypes)
+        def example_entrypoint(settings):
+            print("Running...")
+
+        try:
+            cb = get_compute_block()
+            generate_config_from_compute_block(
+                cb, generated_config_path)
+        except Exception as e:
+            self.fail(f"Exception raised unexpectedly: {e}")
+
+        with generated_config_path.open("r") as gen_file:
+            generated_yaml = yaml.safe_load(gen_file)
+
+        with reference_config_path.open("r") as ref_file:
+            reference_yaml = yaml.safe_load(ref_file)
+
+        # Compare the contents
+        self.assertEqual(
+            generated_yaml, reference_yaml,
+            "Generated YAML does not match the reference YAML"
+        )
+
+        generated_config_path.unlink()
+
+    def test_entrypoint_with_identifier_and_env_override(self):
+        """Test if environment variables override settings correctly with
+        identifiers."""
+
+        # Set up the environment variables
+        env_vars = {
+            "my_file_one_S3_HOST": "overridden_host",
+            "my_file_one_S3_PORT": "overridden_port",
+            "my_file_one_S3_ACCESS_KEY": "overridden_access",
+            "my_file_one_S3_SECRET_KEY": "overridden_secret",
+            "my_file_one_BUCKET_NAME": "overridden_bucket",
+            "my_file_one_FILE_PATH": "overridden_file_path",
+            "my_file_one_FILE_NAME": "overridden_file_name",
+            "my_pg_PG_USER": "overridden_user",
+            "my_pg_PG_PASS": "overridden_pass",
+            "my_pg_PG_HOST": "overridden_host",
+            "my_pg_PG_PORT": "overridden_port",
+            "my_pg_DB_TABLE": "overridden_table"
+        }
+
+        # Set the environment variables
+        for key, value in env_vars.items():
+            os.environ[key] = value
+
+        try:
+            @entrypoint(SettingOtherTypes)
+            def example_entrypoint(settings):
+                return (
+                    settings.input_one.S3_HOST,
+                    settings.input_one.S3_PORT,
+                    settings.input_one.S3_ACCESS_KEY,
+                    settings.input_one.S3_SECRET_KEY,
+                    settings.input_one.BUCKET_NAME,
+                    settings.input_one.FILE_PATH,
+                    settings.input_one.FILE_NAME,
+                    settings.output.PG_USER,
+                    settings.output.PG_PASS,
+                    settings.output.PG_HOST,
+                    settings.output.PG_PORT,
+                    settings.output.DB_TABLE,
+                )
+
+            result = example_entrypoint()
+
+            # Expected values
+            expected_values = [
+                "overridden_host", "overridden_port", "overridden_access",
+                "overridden_secret", "overridden_bucket",
+                "overridden_file_path", "overridden_file_name",
+                "overridden_user", "overridden_pass", "overridden_host",
+                "overridden_port", "overridden_table"
+            ]
+
+            # Assert that the results match expected values
+            for idx, expected in enumerate(expected_values):
+                self.assertEqual(result[idx], expected)
+        finally:
+            # Clean up the environment variables
+            for key in env_vars:
+                if key in os.environ:
+                    del os.environ[key]
+
     def test_entrypoint_yaml_cfg_different_to_code_cfg(self):
         # Tests if the passed settings to entrypoint config is different
         # to the one in yaml
+
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print("Running example_entrypoint...")
