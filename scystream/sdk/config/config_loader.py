@@ -36,7 +36,6 @@ class SDKConfig:
         """
         Creates or returns the singleton instance of SDKConfig.
 
-        :param config_path: Path to the configuration YAML file.
         :param app_name: The name of the application.
         :param cb_spark_master: The URL of the Spark master.
 

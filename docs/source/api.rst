@@ -18,7 +18,7 @@ The scystream-sdk contains of two main configuration objects.
 
 1. SDKConfig (:class:`scystream.sdk.config.SDKConfig`)
     This is a Object containing all the global configurations for the SDK to work.
-    This could be, for example, the location of the ComputeBlockConfig file.
+    This could be, for example, the app name, which will be used to identify the compute block on your spark-master.
 
 2. ComputeBlockConfig (:class:`scystream.sdk.config.models.ComputeBlock`)
     The ComputeBlockConfig is a file that "configures" the ComputeBlocks Inputs and Outputs.
@@ -49,9 +49,15 @@ There are three main types of Settings:
     Use this when defining settings for your inputs.
     Under the hood, this works exactly the same as EnvSettings.
 
-3. InputSetting (:class:`scystream.sdk.env.settingssettings.OutputSettings`)
+3. InputSetting (:class:`scystream.sdk.env.settings.OutputSettings`)
     Use this when defining settings for your outputs.
     Under the hood, htis works exactly the same as EnvSettings.
+
+The SDK also provides more specific types of inputs and outputs. These offer predefined config-keys:
+
+4. FileSettings (:class:`scystream.sdk.env.settings.FileSettings`)
+    
+5. PostgresSettings (:class:`scystream.sdk.env.settings.PostgresSettings`)
 
 Spark Manager (:mod:`scystream.sdk.spark_manager`)
 --------------------------------------------------
