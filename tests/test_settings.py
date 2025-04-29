@@ -247,9 +247,10 @@ class TestSettings(unittest.TestCase):
         def example_entrypoint(settings):
             print(f"{settings}....")
 
+        invalid_config = f"{self.TEST_SETTINGS_FILES}/simple_cfg_invalid.yaml"
         with self.assertRaises(ValueError):
             validate_config_with_code(
-                config_path=f"{self.TEST_SETTINGS_FILES}/simple_cfg_invalid.yaml"
+                config_path=invalid_config
             )
 
     def test_entrypoint_with_setting_default(self):
