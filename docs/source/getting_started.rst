@@ -179,8 +179,6 @@ You can configure three aspects of the SDK.
 
 2. The `cb_spark_master` (which defines the externally reachable URL of the Spark Master)
 
-3. The `config_path` (configures the path for your `cbc.yaml`)
-
 You can configure it like the following:
 
 .. code-block:: python
@@ -190,7 +188,6 @@ You can configure it like the following:
     SDKConfig(
         app_name="test_app"
         cb_spark_master="local[*]"
-        config_path="configs/cb_config.yaml"
     )
 
     print("The rest of your code.")

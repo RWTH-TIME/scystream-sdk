@@ -6,7 +6,7 @@ from scystream.sdk.config.models import ComputeBlock, Entrypoint, \
     InputOutputModel
 from scystream.sdk.config.compute_block_utils import get_compute_block
 
-CONFIG_FILE_DEFAULT_NAME = "cbc.yaml"
+CBC_CONFIG_DEFAULT_IDENTIFIER = "cbc.yaml"
 UNNAMED_APP_NAME = "unnamed_compute_block"
 # In production, the ComputeBlock must be within the same docker network
 # as the spark-master & workers!
@@ -21,8 +21,6 @@ class SDKConfig:
     to the configuration file (`cbc.yaml`), the application name, and
     the Spark master URL for ComputeBlock communication.
 
-    :param config_path: Path to the configuration YAML file
-        (default: 'cbc.yaml').
     :param app_name: The name of the application
         (default: 'unnamed_compute_block').
     :param cb_spark_master: The URL of the Spark master
@@ -32,14 +30,12 @@ class SDKConfig:
 
     def __new__(
         cls,
-        config_path: str = CONFIG_FILE_DEFAULT_NAME,
         app_name: str = UNNAMED_APP_NAME,
         cb_spark_master: str = COMPUTE_BLOCK_SPARK_DEFAULT_MASTER
     ):
         """
         Creates or returns the singleton instance of SDKConfig.
 
-        :param config_path: Path to the configuration YAML file.
         :param app_name: The name of the application.
         :param cb_spark_master: The URL of the Spark master.
 
@@ -47,26 +43,9 @@ class SDKConfig:
         """
         if cls._instance is None:
             cls._instance = super(SDKConfig, cls).__new__(cls)
-            cls._instance.config_path = config_path
             cls._instance.app_name = app_name
             cls._instance.cb_spark_master = cb_spark_master
         return cls._instance
-
-    def set_config_path(self, config_path: str):
-        """
-        Set the path to the configuration file.
-
-        :param config_path: The path to the configuration YAML file.
-        """
-        self.config_path = config_path
-
-    def get_config_path(self) -> str:
-        """
-        Get the path to the configuration file.
-
-        :return: The configuration file path.
-        """
-        return self.config_path
 
     def get_cb_spark_master(self) -> str:
         """
@@ -108,7 +87,8 @@ def _compare_configs(
 
 
 def validate_config_with_code(
-        entrypoint_name: str = None
+        entrypoint_name: str | None = None,
+        config_path: str | None = None
 ):
     """
     Validates that the configuration loaded from the YAML file matches
@@ -120,7 +100,7 @@ def validate_config_with_code(
 
     :raises ValueError: If the configurations do not match.
     """
-    block_from_cfg = load_config()
+    block_from_cfg = load_config(config_path)
     block_from_code = get_compute_block()
 
     if entrypoint_name:
@@ -132,24 +112,38 @@ def validate_config_with_code(
         _compare_configs(block_from_cfg, block_from_code)
 
 
-def load_config() -> ComputeBlock:
+def load_config(path_to_cfg: str | None) -> ComputeBlock:
     """
-    Loads the configuration from the YAML file and returns a ComputeBlock
-    instance.
+    Loads and validates configuration from a YAML file.
 
-    Validates the configuration file using Pydantic's model validation.
+    If no path is provided, attempts to load from the default location in the
+    current working directory.
 
-    :return: A ComputeBlock instance if the YAML file is valid.
-
-    :raises ValueError: If there is a validation error in the configuration
-        file.
+    :param path_to_cfg: Optional path to the configuration YAML file.
+    :return: A ComputeBlock instance if the YAML is valid.
+    :raises ValueError: If the config file is missing, invalid, or fails
+        validation.
     """
     try:
-        file = _find_and_load_config()
-        block_from_cfg = ComputeBlock(**file)
-        return block_from_cfg
+        if path_to_cfg:
+            path = Path(path_to_cfg)
+        else:
+            path = Path.cwd() / CBC_CONFIG_DEFAULT_IDENTIFIER
+
+        if not path.is_file():
+            raise FileNotFoundError(f"Configuration file '{path}' not found.")
+
+        with path.open("r") as f:
+            config_data = yaml.safe_load(f)
+
+        return ComputeBlock(**config_data)
+
+    except FileNotFoundError as e:
+        raise FileNotFoundError(str(e))
+    except yaml.YAMLError as e:
+        raise ValueError(f"Error parsing YAML configuration: {e}")
     except ValidationError as e:
-        raise ValueError(f"Configuration file validation error: {e}")
+        raise ValueError(f"Configuration validation error: {e}")
 
 
 def generate_config_from_compute_block(
@@ -168,35 +162,3 @@ def generate_config_from_compute_block(
     """
     with output_path.open("w") as file:
         yaml.dump(compute_block.model_dump(), file, default_flow_style=False)
-
-
-def _find_and_load_config():
-    """
-    Finds and loads the configuration file from the project’s root directory.
-
-    :return: The loaded configuration data as a dictionary.
-
-    :raises FileNotFoundError: If the configuration file is not found.
-    :raises ValueError: If there is an error parsing the YAML file.
-    """
-    sdk_cfg = SDKConfig()
-    config_path = sdk_cfg.get_config_path()
-
-    full_path = Path.cwd() / config_path
-
-    if not full_path.is_file():
-        raise FileNotFoundError(
-            f"Configuration file '{full_path}' not found."
-        )
-
-    try:
-        with full_path.open("r") as file:
-            config_data = yaml.safe_load(file)
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            f"Configuration file '{full_path}' not found.'"
-        )
-    except yaml.YAMLError as e:
-        raise ValueError(f"Error parsing YAML file: {e}")
-
-    return config_data

@@ -6,7 +6,6 @@ import os
 from scystream.sdk.core import entrypoint
 from scystream.sdk.env.settings import EnvSettings, InputSettings, \
     OutputSettings, PostgresSettings, FileSettings
-from scystream.sdk.scheduler import Scheduler
 from scystream.sdk.config.config_loader import \
     validate_config_with_code, get_compute_block, \
     generate_config_from_compute_block
@@ -189,75 +188,80 @@ class TestSettings(unittest.TestCase):
                     del os.environ[key]
 
     def test_entrypoint_yaml_cfg_different_to_code_cfg(self):
-        # Tests if the passed settings to entrypoint config is different
-        # to the one in yaml
+        """
+        Tests if the passed settings to entrypoint config is different
+        to the one in yaml
+        """
 
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print("Running example_entrypoint...")
-
-        self.global_config.set_config_path(
-            f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_inv.yaml"
-        )
 
         with self.assertRaises(ValueError):
-            Scheduler.execute_function("example_entrypoint")
+            validate_config_with_code(
+                "example_entrypoint",
+                f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_inv.yaml"
+            )
 
     def test_entrypoint_yaml_cfg_not_different_to_code_cfg(self):
-        # Tests if the passed settings to entrypoint config is different
-        # to the one in yaml
-        # HINT: TOTAL CONFIG does not fit, only the entrypoint ones fits
+        """
+        Tests if the passed settings to the entrypoint config is diffrent
+        to the one in yaml
+        """
+
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print("Running example_entrypoint...")
 
-        self.global_config.set_config_path(
-            f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_v.yaml"
-        )
-
         try:
-            Scheduler.execute_function("example_entrypoint")
+            validate_config_with_code(
+                "example_entrypoint",
+                f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_v.yaml"
+            )
         except Exception:
             self.fail("")
 
     def test_validate_cfgs_no_error(self):
-        # Tests if validate_config_with_code works if config and settings
-        # correspond
+        """
+        Tests if validate_config_with_code works if config and settings
+        correspond.
+        """
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print(f"{settings}....")
 
-        self.global_config.set_config_path(
-            f"{self.TEST_SETTINGS_FILES}/simple_cfg.yaml")
-
         try:
-            validate_config_with_code()
+            validate_config_with_code(
+                config_path=f"{self.TEST_SETTINGS_FILES}/simple_cfg.yaml"
+            )
         except Exception:
             self.fail(
                 "validate_config_with_code raised an Exception unexpectedly!")
 
     def test_validate_cfgs_error(self):
-        # Tests if validate_config_with_code works if config and settings
-        # do not correspond
+        """
+        Tests if validate_config_with_code works if config and settings
+        do not correspond.
+        """
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print(f"{settings}....")
 
-        self.global_config.set_config_path(
-            f"{self.TEST_SETTINGS_FILES}/simple_cfg_invalid.yaml")
-
+        invalid_config = f"{self.TEST_SETTINGS_FILES}/simple_cfg_invalid.yaml"
         with self.assertRaises(ValueError):
-            validate_config_with_code()
+            validate_config_with_code(
+                config_path=invalid_config
+            )
 
     def test_entrypoint_with_setting_default(self):
-        # Tests if defaults and overriding defaults with ENvs works
-        # We use SimpleSettings as they all have a default
+        """
+        Tests if defaults and overriding defaults with ENVs works.
+        We use SimpleSettings as they all have a default.
+        """
+
         @entrypoint(SimpleSettings)
         def with_default_settings(settings):
             return settings.input_one.TEST
-
-        self.global_config.set_config_path(
-            f"{self.TEST_SETTINGS_FILES}/simple_cfg.yaml")
 
         result = with_default_settings()
         self.assertEqual(result, "test")
@@ -276,12 +280,9 @@ class TestSettings(unittest.TestCase):
         def without_def_settings(settings):
             print("test...")
 
-        self.global_config.set_config_path(
-            f"{self.TEST_SETTINGS_FILES}/without_default_settings.yaml")
-
         # do we fail if environments not set
         with self.assertRaises(ValueError):
-            Scheduler.execute_function("without_def_settings")
+            without_def_settings()
 
     def test_entrypoint_no_setting_default_two(self):
         # Tests if it works, if ENVs that MUST be set, are actually set

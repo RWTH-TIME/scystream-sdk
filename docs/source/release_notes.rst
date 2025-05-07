@@ -31,3 +31,12 @@ scystream-sdk 1.1.0 - Release Notes
    in-/ouput or S3_ACCESS_KEY for defining the access key of an S3 Bucket.
 
    These settings can ultimatively be used to configure the corresponding connections.
+
+scystream-sdk 1.2.0 - Release Notes
+-----------------------------------
+
+1. Removed adjustable config path from SDKConfig
+
+   The configuration option `config_path` was removed. Every compute block repository must now
+   contain the `cbc.yaml` within it's root directory and with the file-name: `cbc.yaml`
+    
