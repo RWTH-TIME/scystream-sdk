@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="scystream-sdk",
-    version="1.2.0",
+    version="1.2.1",
     description="The official SDK for developing scystream compute blocks",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

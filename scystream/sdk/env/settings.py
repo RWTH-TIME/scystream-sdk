@@ -134,6 +134,7 @@ class FileSettings(EnvSettings):
     BUCKET_NAME: str
     FILE_PATH: str
     FILE_NAME: str
+    FILE_EXT: str
 
     def __init_subclass__(cls, **kwargs):
         """

@@ -138,6 +138,7 @@ class TestSettings(unittest.TestCase):
             "my_file_one_BUCKET_NAME": "overridden_bucket",
             "my_file_one_FILE_PATH": "overridden_file_path",
             "my_file_one_FILE_NAME": "overridden_file_name",
+            "my_file_one_FILE_EXT": "overridden_file_ext",
             "my_pg_PG_USER": "overridden_user",
             "my_pg_PG_PASS": "overridden_pass",
             "my_pg_PG_HOST": "overridden_host",
@@ -160,6 +161,7 @@ class TestSettings(unittest.TestCase):
                     settings.input_one.BUCKET_NAME,
                     settings.input_one.FILE_PATH,
                     settings.input_one.FILE_NAME,
+                    settings.input_one.FILE_EXT,
                     settings.output.PG_USER,
                     settings.output.PG_PASS,
                     settings.output.PG_HOST,
@@ -174,8 +176,8 @@ class TestSettings(unittest.TestCase):
                 "overridden_host", "overridden_port", "overridden_access",
                 "overridden_secret", "overridden_bucket",
                 "overridden_file_path", "overridden_file_name",
-                "overridden_user", "overridden_pass", "overridden_host",
-                "overridden_port", "overridden_table"
+                "overridden_file_ext", "overridden_user", "overridden_pass",
+                "overridden_host", "overridden_port", "overridden_table"
             ]
 
             # Assert that the results match expected values
