@@ -10,6 +10,7 @@ entrypoints:
       input_one:
         config:
           my_file_oneBUCKET_NAME: null
+          my_file_oneFILE_EXT: "txt"
           my_file_oneFILE_NAME: null
           my_file_oneFILE_PATH: null
           my_file_oneS3_ACCESS_KEY: null

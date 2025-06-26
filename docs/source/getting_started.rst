@@ -87,6 +87,7 @@ Use the ``FileSettings`` class for configurations related to file-based inputs a
 - ``BUCKET_NAME``: The name of the S3 bucket.
 - ``FILE_PATH``: The path to the file within the bucket.
 - ``FILE_NAME``: The name of the file.
+- ``FILE_EXT``: The extention of the file (without ".").
 
 PostgreSQL Settings (``PostgresSettings``)
 """"""""""""""""""""""""""""""""""""""""""
