@@ -348,20 +348,53 @@ See a simple example here:
 Using a S3 Bucket
 -----------------
 
-The SDK has utilities implemented to up- & download from a S3 Bucket.
+The SDK has utilities implemented to up- & download from an S3 Bucket.
 Currently, it's *NOT* using Apache Spark for that.
 
-To interact with a S3 Bucket you have to do the following:
+You can interact with an S3 Bucket in **two ways**:
 
-1. Configure the S3 Connection using the :class:`scystream.sdk.file_handling.s3_manager.S3Config`
+**1. The simple way (no manual connection setup required)**  
+**2. The advanced way (manual `S3Operations` instantiation)**
 
-   Note: You can also use :class:`scystream.sdk.env.settings.FileSettings`
+---
 
-2. Setup the S3 Connection using the :class:`scystream.sdk.file_handling.s3_manager.S3Operations`
+Simple Usage
+^^^^^^^^^^^^
 
-3. Use the Operations
+For most use cases, you can use the new convenience methods that do not require
+manually creating a connection object.
 
-See a simple example here:
+Example:
+
+.. code-block:: python
+    :emphasize-lines: 4
+
+    from scystream.sdk.file_handling.s3_manager import S3Operations
+
+    @entrypoint()
+    def test(settings):
+        # Directly download using FileSettings
+        S3Operations.download(settings.txt_input, "/tmp/file.txt")
+
+        # Directly upload using FileSettings 
+        S3Operations.upload(settings.txt_input, "/tmp/file.txt")
+
+---
+
+Advanced Usage
+^^^^^^^^^^^^^^
+
+If you want to reuse the same connection for multiple operations or provide a
+custom `S3Config`, you can manually initialize `S3Operations`.
+
+1. Configure the S3 Connection using :class:`scystream.sdk.file_handling.s3_manager.S3Config`  
+   or :class:`scystream.sdk.env.settings.FileSettings`.
+
+2. Setup the S3 Connection using :class:`scystream.sdk.file_handling.s3_manager.S3Operations`.
+
+3. Use the operations.
+
+Example:
 
 .. code-block:: python
     :emphasize-lines: 5, 12, 14, 20
@@ -371,10 +404,10 @@ See a simple example here:
     @entrypoint()
     def test():
         s3_conf = S3Config(
-            access_key="access",
-            secret_key="secret",
-            endpoint="http://localhost",
-            post=9000
+            S3_ACCESS_KEY="access",
+            S3_SECRET_KEY="secret",
+            S3_HOST="http://localhost",
+            S3_PORT="9000"
         )
 
         s3_conn = S3Operations(s3_conf)
@@ -390,3 +423,8 @@ See a simple example here:
             s3_object_name="target_file_name.txt",
             local_file_path="download.txt"
         )
+
+Instead of using `download_file`, you can also use `download_file_from_settings`,
+which takes the configurations from a `FileSettings` instance to determine the
+`bucket_name` and `s3_object_name`.
+

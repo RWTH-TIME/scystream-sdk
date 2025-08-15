@@ -113,3 +113,82 @@ class S3Operations():
         """
         self.boto_client.download_file(
             bucket_name, s3_object_name, local_file_path)
+
+    def download_file_from_settings(
+        self,
+        settings: FileSettings,
+        local_path: str
+    ):
+        """
+        Wrapper for download_file function, takes the settings class and
+        downloads it to a local path.
+
+        :param settings: The settings class which should be used for
+            downloading
+        :param local_path: The local path where the downloaded file will
+            be saved.
+        """
+        self.download_file(
+            bucket_name=settings.BUCKET_NAME,
+            s3_object_name=(
+                f"{settings.FILE_PATH}/"
+                f"{settings.FILE_NAME}."
+                f"{settings.FILE_EXT}"
+            ),
+            local_file_path=local_path
+        )
+
+    def upload_file_from_settings(
+            self,
+            settings: FileSettings,
+            local_path: str
+    ):
+        """
+        Wrapper for :meth:`upload_file` that uses a
+        :class:`~scystream.sdk.env.settings.FileSettings`
+        instance to construct the S3 object key.
+
+        The object key is built as ``{FILE_PATH}/{FILE_NAME}.{FILE_EXT}``.
+
+        :param settings: File-related configuration (bucket, path, file name,
+                                                     extension, and S3 creds).
+        :param local_path: Path to the local file that should be uploaded.
+        :raises botocore.client.ClientError: If the upload fails.
+        """
+        self.upload_file(
+            path_to_file=local_path,
+            bucket_name=settings.BUCKET_NAME,
+            target_name=(
+                f"{settings.FILE_PATH}/"
+                f"{settings.FILE_NAME}."
+                f"{settings.FILE_EXT}"
+            )
+        )
+
+    @staticmethod
+    def upload(settings: FileSettings, local_path: str):
+        """
+        Convenience helper to upload a file **without** manually instantiating
+        :class:`S3Operations`.
+
+        :param settings: File-related configuration (bucket, path, file name,
+                                                     extension, and S3 creds).
+        :param local_path: Path to the local file that should be uploaded.
+        :raises botocore.client.ClientError: If the upload fails.
+        """
+        conn = S3Operations(settings)
+        conn.upload_file_from_settings(settings, local_path)
+
+    @staticmethod
+    def download(settings: FileSettings, local_path: str):
+        """
+        Convenience helper to download a file **without** manually
+        instantiating :class:`S3Operations`.
+
+        :param settings: File-related configuration (bucket, path, file name,
+                                                     extension, and S3 creds).
+        :param local_path: Local destination path for the downloaded file.
+        :raises botocore.client.ClientError: If the download fails.
+        """
+        conn = S3Operations(settings)
+        conn.download_file_from_settings(settings, local_path)
