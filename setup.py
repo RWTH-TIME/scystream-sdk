@@ -24,6 +24,7 @@ setup(
         "pyspark>=3.5.3",
         "setuptools>=75.5.0",
         "boto3>=1.35.65",
+        "setuptools>=65.0.0",
     ],
     extras_require={
         "postgres": [
