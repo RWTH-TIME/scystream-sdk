@@ -77,7 +77,10 @@ class SparkPostgresOperations(BasePostgresOperations):
         self, spark: SparkSession, config: PostgresConfig | PostgresSettings
     ):
         self.spark_session = spark
-        self.jdbc_url = f"jdbc:postgresql://{config.PG_HOST}:{config.PG_PORT}/{config.DB_NAME}"
+        self.jdbc_url = (
+            f"jdbc:postgresql://{config.PG_HOST}:"
+            f"{config.PG_PORT}/{config.DB_NAME}"
+        )
         self.properties = {
             "user": config.PG_USER,
             "password": config.PG_PASS,

@@ -2,7 +2,11 @@ import yaml
 from typing import Union
 from pydantic import ValidationError
 from pathlib import Path
-from scystream.sdk.config.models import ComputeBlock, Entrypoint, InputOutputModel
+from scystream.sdk.config.models import (
+    ComputeBlock,
+    Entrypoint,
+    InputOutputModel,
+)
 from scystream.sdk.config.compute_block_utils import get_compute_block
 
 CBC_CONFIG_DEFAULT_IDENTIFIER = "cbc.yaml"
@@ -148,7 +152,9 @@ def load_config(path_to_cfg: str | None) -> ComputeBlock:
         raise ValueError(f"Configuration validation error: {e}")
 
 
-def generate_config_from_compute_block(compute_block: ComputeBlock, output_path: Path):
+def generate_config_from_compute_block(
+    compute_block: ComputeBlock, output_path: Path
+):
     """
     Generates a YAML configuration file from a ComputeBlock instance.
 
