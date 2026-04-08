@@ -28,6 +28,7 @@ entrypoints:
           my_pg_PG_PASS: null
           my_pg_PG_PORT: null
           my_pg_PG_USER: null
+          my_pg_DB_NAME: null
         description: <to-be-set>
         type: pg_table
 name: <tbs>
