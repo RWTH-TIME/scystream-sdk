@@ -25,18 +25,19 @@ class EnvSettings(BaseSettings):
 
     - Ignore extra fields that are not defined in the model.
     """
+
     model_config = SettingsConfigDict(
         env_file_encoding=ENV_FILE_ENCODING,
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
     )
 
     @classmethod
     def from_env(
         cls,
-        env_file: Union[str, Path, List[Union[str, Path]]] = None,
+        env_file: Union[str, Path, List[Union[str, Path]]] | None = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Create an instance of the settings class from environment files
@@ -64,7 +65,8 @@ class EnvSettings(BaseSettings):
         """
         type_hints = get_type_hints(cls)
         return {
-            name: typ for name, typ in type_hints.items()
+            name: typ
+            for name, typ in type_hints.items()
             if isinstance(typ, type) and issubclass(typ, BaseSettings)
         }
 
@@ -97,7 +99,8 @@ class EnvSettings(BaseSettings):
         type_hints = get_type_hints(cls)
         for field_name, field_type in type_hints.items():
             if isinstance(field_type, type) and issubclass(
-                    field_type, BaseSettings):
+                field_type, BaseSettings
+            ):
                 # Set a default factory for nested BaseSettings fields
                 default_field = Field(default_factory=field_type)
                 setattr(cls, field_name, default_field)
@@ -127,8 +130,9 @@ class FileSettings(EnvSettings):
     A subclass of `EnvSettings` that should be used to define file inputs
     and outputs.
     """
+
     S3_HOST: str
-    S3_PORT: str
+    S3_PORT: int
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: str
     BUCKET_NAME: str
@@ -141,7 +145,7 @@ class FileSettings(EnvSettings):
         Enforce __identifier__ for FileSettings subclasses.
         """
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, '__identifier__'):
+        if not hasattr(cls, "__identifier__"):
             raise TypeError(
                 f"Class {cls.__name__} must define an __identifier__ attribute"
                 "because it inherits from FileSettings"
@@ -151,7 +155,7 @@ class FileSettings(EnvSettings):
             env_file_encoding=ENV_FILE_ENCODING,
             case_sensitive=True,
             extra="ignore",
-            env_prefix=f"{cls.__identifier__}_"
+            env_prefix=f"{cls.__identifier__}_",
         )
 
 
@@ -160,18 +164,20 @@ class PostgresSettings(EnvSettings):
     A subclass of `EnvSettings` that should be used to define db_table
     inputs and outputs located on a postgres db.
     """
+
     PG_USER: str
     PG_PASS: str
     PG_HOST: str
-    PG_PORT: str
+    PG_PORT: int
     DB_TABLE: str
+    DB_NAME: str
 
     def __init_subclass__(cls, **kwargs):
         """
         Enforce __identifier__ for PostgresSettings subclasses.
         """
         super().__init_subclass__(**kwargs)
-        if not hasattr(cls, '__identifier__'):
+        if not hasattr(cls, "__identifier__"):
             raise TypeError(
                 f"Class {cls.__name__} must define an __identifier__ attribute"
                 "because it inherits from PostgresSettings"
@@ -181,7 +187,7 @@ class PostgresSettings(EnvSettings):
             env_file_encoding=ENV_FILE_ENCODING,
             case_sensitive=True,
             extra="ignore",
-            env_prefix=f"{cls.__identifier__}_"
+            env_prefix=f"{cls.__identifier__}_",
         )
 
 
