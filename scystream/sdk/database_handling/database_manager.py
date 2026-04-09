@@ -1,36 +1,17 @@
 from abc import ABC, abstractmethod
+from urllib.parse import urlparse
 from pyspark.sql import SparkSession, DataFrame
-from pydantic import BaseModel
-from scystream.sdk.env.settings import PostgresSettings
 
 import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.sql import quoted_name
 
 
-class PostgresConfig(BaseModel):
-    """
-    Configuration class for PostgreSQL connection details.
-
-    This class holds the necessary configuration parameters to connect to a
-    PostgreSQL database. It includes the database user, password, host, and
-    port.
-
-    :param PG_USER: The username for the PostgreSQL database.
-    :param PG_PASS: The password for the PostgreSQL database.
-    :param PG_HOST: The host address of the PostgreSQL server.
-    :param PG_PORT: The port number of the PostgreSQL server.
-    """
-
-    PG_USER: str
-    PG_PASS: str
-    PG_HOST: str
-    DB_NAME: str
-    PG_PORT: int
-
-
-class BasePostgresOperations(ABC):
+class BaseDatabaseOperations(ABC):
     MAX_TABLE_NAME_LENGTH = 63
+
+    def __init__(self, dsn: str):
+        self.dsn = dsn
 
     def _validate_table_name(self, table: str):
         if len(table) > self.MAX_TABLE_NAME_LENGTH:
@@ -63,7 +44,7 @@ class BasePostgresOperations(ABC):
         pass
 
 
-class SparkPostgresOperations(BasePostgresOperations):
+class SparkDatabaseOperations(BaseDatabaseOperations):
     """
     Class to perform PostgreSQL operations using Apache Spark.
 
@@ -73,19 +54,43 @@ class SparkPostgresOperations(BasePostgresOperations):
     database connectivity.
     """
 
-    def __init__(
-        self, spark: SparkSession, config: PostgresConfig | PostgresSettings
-    ):
+    def __init__(self, spark: SparkSession, dsn: str):
+        super().__init__(dsn)
         self.spark_session = spark
-        self.jdbc_url = (
-            f"jdbc:postgresql://{config.PG_HOST}:"
-            f"{config.PG_PORT}/{config.DB_NAME}"
-        )
+
+        self.jdbc_url, self.properties = self._dsn_to_jdbc(dsn)
+
         self.properties = {
-            "user": config.PG_USER,
-            "password": config.PG_PASS,
             "driver": "org.postgresql.Driver",
         }
+
+    def _dsn_to_jdbc(self, dsn: str) -> tuple[str, dict]:
+        """
+        Convert SQLAlchemy DSN to JDBC URL and connection properties.
+        """
+
+        parsed = urlparse(dsn)
+        if not parsed.hostname:
+            raise ValueError("Invalid DSN: missing hostname")
+
+        # Build JDBC URL
+        jdbc_url = (
+            f"jdbc:postgresql://{parsed.hostname}:"
+            f"{parsed.port or 5432}{parsed.path}"
+        )
+
+        # Extract credentials
+        properties = {
+            "driver": "org.postgresql.Driver",
+        }
+
+        if parsed.username:
+            properties["user"] = parsed.username
+
+        if parsed.password:
+            properties["password"] = parsed.password
+
+        return jdbc_url, properties
 
     def read(
         self,
@@ -99,13 +104,10 @@ class SparkPostgresOperations(BasePostgresOperations):
         custom SQL query
         to retrieve data from the database.
 
-        :param database_name: The name of the database to connect to.
         :param table: The name of the table to read data from. Must be provided
             if `query` is not supplied. (optional)
         :param query: A custom SQL query to run. If provided, this overrides
             the `table` parameter. (optional)
-
-        :raises ValueError: If neither `table` nor `query` is provided.
 
         :return: A Spark DataFrame containing the result of the query or
             table data.
@@ -113,12 +115,11 @@ class SparkPostgresOperations(BasePostgresOperations):
         """
         self._validate_read_inputs(table, query)
 
-        db_url = f"{self.jdbc_url}"
         dbtable_option = f"({query}) AS subquery" if query else table
 
         return (
             self.spark_session.read.format("jdbc")
-            .option("url", db_url)
+            .option("url", self.jdbc_url)
             .option("dbtable", dbtable_option)
             .options(**self.properties)
             .load()
@@ -145,37 +146,48 @@ class SparkPostgresOperations(BasePostgresOperations):
         """
         self._validate_table_name(table)
 
-        db_url = f"{self.jdbc_url}"
-        dataframe.write.format("jdbc").option("url", db_url).option(
+        dataframe.write.format("jdbc").option("url", self.jdbc_url).option(
             "dbtable", table
         ).options(**self.properties).mode(mode).save()
 
 
-class PandasPostgresOperations(BasePostgresOperations):
+class PandasDatabaseOperations(BaseDatabaseOperations):
     """
-    Class to perform PostgreSQL operations using Pandas and SQLAlchemy.
+    Database operations using Pandas and SQLAlchemy.
 
-    This class provides methods to read from and write to a PostgreSQL database
-    using SQLAlchemy and Pandas DataFrames. It requires a PostgresConfig or
-    PostgresSettings object for database connectivity.
+    This class provides a simple interface to read from and write to any
+    SQLAlchemy-compatible database using Pandas DataFrames. The connection
+    is established via a DSN (Data Source Name), making this implementation
+    backend-agnostic.
 
-    Compared to the Spark-based implementation, this class is intended for
-    local, non-distributed workloads and is recommended when working with
-    smaller datasets.
+    Supported databases include (but are not limited to):
+    - PostgreSQL
+    - MySQL
+    - SQLite
+    - Snowflake
+    - Oracle
+
+    This implementation is best suited for local or small-to-medium sized
+    datasets where distributed processing (e.g., Spark) is not required.
     """
 
-    def __init__(self, config: PostgresConfig | PostgresSettings):
+    def __init__(self, dsn: str):
         """
-        Initialize the PandasPostgresOperations instance.
+        Initialize the PandasDatabaseOperations instance.
 
-        :param config: Configuration object containing PostgreSQL connection
-            details. Can be either PostgresConfig or PostgresSettings.
+        :param dsn: A SQLAlchemy-compatible database connection string
+            (DSN), e.g.:
+            - postgresql://user:pass@host:5432/db
+            - mysql+pymysql://user:pass@host/db
+            - sqlite:///local.db
+
+        :raises ValueError: If the DSN is invalid or connection fails.
+
+        :note: Uses SQLAlchemy's connection pooling with `pool_pre_ping=True`
+            to ensure stale connections are automatically refreshed.
         """
-        self.config = config
-        self.engine = create_engine(
-            f"postgresql+psycopg2://{config.PG_USER}:{config.PG_PASS}"
-            f"@{config.PG_HOST}:{int(config.PG_PORT)}/{config.DB_NAME}"
-        )
+        super().__init__(dsn)
+        self.engine = create_engine(dsn, pool_pre_ping=True)
 
     def read(
         self,
@@ -183,23 +195,26 @@ class PandasPostgresOperations(BasePostgresOperations):
         query: str | None = None,
     ) -> pd.DataFrame:
         """
-        Reads data from a PostgreSQL database into a Pandas DataFrame.
+        Read data from the database into a Pandas DataFrame.
 
-        This method can either read all data from a specified table or execute
-        a custom SQL query.
+        This method supports two modes of operation:
+        - Reading all rows from a specified table
+        - Executing a custom SQL query
 
-        :param table: The name of the table to read data from. Must be provided
+        :param table: The name of the table to read from. Must be provided
             if `query` is not supplied. (optional)
-        :param query: A custom SQL query to execute. If provided, this\
+        :param query: A custom SQL query to execute. If provided, this
             overrides the `table` parameter. (optional)
 
         :raises ValueError: If neither `table` nor `query` is provided.
-        :raises ValueError: If the table name exceeds PostgreSQL's maximum
-            length (63 characters).
+        :raises ValueError: If the table name exceeds the allowed length.
 
-        :return: A Pandas DataFrame containing the result of the query or
-            table data.
+        :return: A Pandas DataFrame containing the query result.
         :rtype: pandas.DataFrame
+
+        :example:
+            >>> db.read(table="users")
+            >>> db.read(query="SELECT id, name FROM users WHERE active = true")
         """
         self._validate_read_inputs(table, query)
 
@@ -215,27 +230,29 @@ class PandasPostgresOperations(BasePostgresOperations):
         mode: str = "overwrite",
     ):
         """
-        Writes a Pandas DataFrame to a specified table in a PostgreSQL\
-        database.
+        Write a Pandas DataFrame to the database.
 
-        This method writes the provided DataFrame to the target PostgreSQL
-        table using SQLAlchemy. The behavior when the table already exists is
+        This method writes the provided DataFrame to the specified table
+        using SQLAlchemy. The behavior when the table already exists is
         controlled via the `mode` parameter.
 
-        :param table: The name of the table where data will be written.
-        :param data: The Pandas DataFrame containing the data to write.
+        :param table: The name of the target table.
+        :param data: The Pandas DataFrame to write.
         :param mode: The write mode. Supported options are:
-            - 'overwrite': Replaces the table if it exists.
-            - 'append': Appends data to the existing table.
+            - 'overwrite': Replace the table if it exists.
+            - 'append': Append data to the existing table.
             Defaults to 'overwrite'. (optional)
 
-        :raises ValueError: If the table name exceeds PostgreSQL's maximum
-            length (63 characters).
-        :raises ValueError: If an unsupported write mode is provided.
+        :raises ValueError: If the table name exceeds the allowed length.
+        :raises ValueError: If an unsupported mode is provided.
 
-        :note: Ensure that the schema of the DataFrame matches the schema of
-            the target table if the table already exists and `mode='append'`.
-        :note: Index columns of the DataFrame are not written to the database.
+        :note:
+            - The DataFrame index is not written to the database.
+            - Ensure schema compatibility when using `mode='append'`.
+
+        :example:
+            >>> db.write("users", df)
+            >>> db.write("users", df, mode="append")
         """
         self._validate_table_name(table)
 

@@ -5,10 +5,10 @@ import unittest
 import os
 from scystream.sdk.core import entrypoint
 from scystream.sdk.env.settings import (
+    DatabaseSettings,
     EnvSettings,
     InputSettings,
     OutputSettings,
-    PostgresSettings,
     FileSettings,
 )
 from scystream.sdk.config.config_loader import (
@@ -29,7 +29,7 @@ class SimpleSettingsOutputOne(OutputSettings):
     OUT: str = "out"
 
 
-class PgTestOutputOne(PostgresSettings, OutputSettings):
+class PgTestOutputOne(DatabaseSettings, OutputSettings):
     __identifier__ = "my_pg"
     EXTENDS: str = "test"
     pass
@@ -149,12 +149,8 @@ class TestSettings(unittest.TestCase):
             "my_file_one_FILE_PATH": "overridden_file_path",
             "my_file_one_FILE_NAME": "overridden_file_name",
             "my_file_one_FILE_EXT": "overridden_file_ext",
-            "my_pg_PG_USER": "overridden_user",
-            "my_pg_PG_PASS": "overridden_pass",
-            "my_pg_PG_HOST": "overridden_host",
-            "my_pg_PG_PORT": 9999,
+            "my_pg_DB_DSN": "overridden_dsn",
             "my_pg_DB_TABLE": "overridden_table",
-            "my_pg_DB_NAME": "overridden_name",
         }
 
         # Set the environment variables
@@ -174,12 +170,8 @@ class TestSettings(unittest.TestCase):
                     settings.input_one.FILE_PATH,
                     settings.input_one.FILE_NAME,
                     settings.input_one.FILE_EXT,
-                    settings.output.PG_USER,
-                    settings.output.PG_PASS,
-                    settings.output.PG_HOST,
-                    settings.output.PG_PORT,
+                    settings.output.DB_DSN,
                     settings.output.DB_TABLE,
-                    settings.output.DB_NAME,
                 )
 
             result = example_entrypoint()
@@ -194,12 +186,8 @@ class TestSettings(unittest.TestCase):
                 "overridden_file_path",
                 "overridden_file_name",
                 "overridden_file_ext",
-                "overridden_user",
-                "overridden_pass",
-                "overridden_host",
-                9999,
+                "overridden_dsn",
                 "overridden_table",
-                "overridden_name",
             ]
 
             # Assert that the results match expected values

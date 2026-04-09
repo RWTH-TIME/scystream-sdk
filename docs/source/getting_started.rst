@@ -26,9 +26,9 @@ essentially environment variables parsed and validated using pydantic.
 You can set "global" Setting (for the entrypoint) using the `envs` block,
 or set "input/output-related" Settings using the config block in each input/output.
 
-There are three types of input/output Settings that can be used: , `PostgresSettings` or
+There are three types of input/output Settings that can be used: , `FileSettings`, `DatabaseSettings` or
 `CustomSettings`.
-File and Postgres Settings do have predefined settings, such as `PG_USER`, `PG_PASS` or `PG_HOST`.
+File and Database Settings do have predefined settings, such as `DB_DSN`, `DB_TABLE` or `S3_HOST`.
 
 
 Basic Usage of the SDK
@@ -89,17 +89,13 @@ Use the ``FileSettings`` class for configurations related to file-based inputs a
 - ``FILE_NAME``: The name of the file.
 - ``FILE_EXT``: The extention of the file (without ".").
 
-PostgreSQL Settings (``PostgresSettings``)
+Database Settings (``DatabaseSettings``)
 """"""""""""""""""""""""""""""""""""""""""
 
-Use the ``PostgresSettings`` class for configurations related to PostgreSQL database inputs and outputs. It includes the following standardized environment variable keys:
+Use the ``DatabaseSettings`` class for configurations related to database inputs and outputs. It includes the following standardized environment variable keys:
 
-- ``PG_USER``: The username for accessing the PostgreSQL database.
-- ``PG_PASS``: The password for accessing the PostgreSQL database.
-- ``PG_HOST``: The host address for the PostgreSQL database.
-- ``PG_PORT``: The port for the PostgreSQL database.
+- ``DB_DSN``: Full database connection string (SQLAlchemy compatible)
 - ``DB_TABLE``: The name of the database table.
-- ``DB_NAME``: The name of the database.
 
 Usage Instructions
 ^^^^^^^^^^^^^^^^^^
@@ -110,7 +106,7 @@ Important Notes
 ---------------
 
 1. **__identifier__ Requirement**:
-   - When using ``FileSettings`` or ``PostgresSettings``, you **must** define an ``__identifier__`` attribute in your input/output class.
+   - When using ``FileSettings`` or ``DatabaseSettings``, you **must** define an ``__identifier__`` attribute in your input/output class.
    - The ``__identifier__`` is used to prefix the environment variable keys, ensuring that they do not conflict when multiple inputs or outputs of the same type are defined.
    - Make sure, that the ``__identifier__`` is unique across your project!
 
@@ -136,10 +132,10 @@ Therefore you should use the  `EnvSettings` class.
    :emphasize-lines: 5,10,14,20,23,24,25,28,29
 
     from scystream.sdk.core import entrypoint
-    from scystream.sdk.env.settings import EnvSettings, InputSettings, OutputSettings, FileSettings, PostgresSettings
+    from scystream.sdk.env.settings import EnvSettings, InputSettings, OutputSettings, FileSettings, DatabaseSettings
 
     # Assuming the Input of your Task is a database table.
-    class ExampleTaskDBInput(PostgresSettings, InputSettings):
+    class ExampleTaskDBInput(DatabaseSettings, InputSettings):
         __identifier__ = "my_first_pg"
         pass
 
@@ -166,7 +162,7 @@ Therefore you should use the  `EnvSettings` class.
     def example_task(settings):
         print("You can use your variables now in your entrypoint.")
 
-        print(f"Look at this: {settings.pg_input.PG_USER}")
+        print(f"Look at this: {settings.pg_input.DB_DSN}")
         print(f"Or this: {settings.file_output.FILE_NAME}")
 
         print("Executing example_task")
@@ -225,12 +221,9 @@ For the Code we previously wrote, this is an example `cbc.yaml`:
         inputs:
           pg_input:
             description: "Postgres input example"
-            type: "pg_table"
+            type: "database_table"
             config:
-              my_first_pg_PG_USER: null
-              my_first_pg_PG_PASS: null
-              my_first_pg_PG_HOST: null
-              my_first_pg_PG_PORT: null
+              my_first_pg_DB_DSN: null
               my_first_pg_DB_TABLE: null
         outputs:
           file_output:
@@ -297,53 +290,30 @@ You can work with either:
 
 All database connections are configured via:
 
-- :class:`scystream.sdk.database_handling.postgres_manager.PostgresConfig`
-- :class:`scystream.sdk.env.settings.PostgresSettings`
-
-.. note::
-
-   The database name must be provided via the configuration (`DB_NAME`).
-   It cannot be overridden at runtime.
+- :class:`scystream.sdk.env.settings.DatabaseSettings`
 
 
 Configuration
 ^^^^^^^^^^^^^
 
-You can configure your PostgreSQL connection in two ways.
+You can configure your Databse in the following way.
 
-**Option 1: Using PostgresConfig**
-
-.. code-block:: python
-
-    from scystream.sdk.database_handling.postgres_manager import PostgresConfig
-
-    config = PostgresConfig(
-        PG_USER="postgres",
-        PG_PASS="postgres",
-        PG_HOST="postgres",
-        PG_PORT=5432,
-        DB_NAME="postgres",
-    )
-
-
-**Option 2: Using PostgresSettings (recommended in pipelines)**
+**Use DatabaseSettings (recommended in pipelines)**
 
 .. code-block:: python
 
-    from scystream.sdk.env.settings import PostgresSettings
+    from scystream.sdk.env.settings import DatabaseSettings
 
-    class MyDatabaseSettings(PostgresSettings):
+    class MyDatabaseSettings(DatabaseSettings):
         __identifier__ = "MY_DB"
 
 The following environment variables must be provided:
 
+As the DB_DSN variable, you can use all SQLAlchemy supported DSNs
+
 .. code-block:: bash
 
-    MY_DB_PG_USER=postgres
-    MY_DB_PG_PASS=postgres
-    MY_DB_PG_HOST=postgres
-    MY_DB_PG_PORT=5432
-    MY_DB_DB_NAME=postgres
+    MY_DB_DB_DSN=postgresql://user:pass@host:5432/db
     MY_DB_DB_TABLE=my_table
 
 
@@ -353,18 +323,20 @@ Working with Pandas DataFrames
 The Pandas integration is the simplest way to interact with PostgreSQL
 and is recommended when Spark is not required.
 
-### Initialize the Postgres client
+Initialize the Postgres client
+""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
-    from scystream.sdk.database_handling.postgres_manager import (
+    from scystream.sdk.database_handling.database_manager import (
         PandasPostgresOperations,
     )
 
-    pg = PandasPostgresOperations(config)
+    pg = PandasDatabaseOperations(config)
 
 
-### Write a Pandas DataFrame
+Write a Pandas DataFrame
+""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -382,7 +354,8 @@ and is recommended when Spark is not required.
     )
 
 
-### Read data from PostgreSQL
+Read data from PostgreSQL
+""""""""""""""""""""""""
 
 **Option A: Read full table**
 
@@ -414,7 +387,8 @@ Spark Integration
 
 Use Spark when working with large-scale or distributed data processing.
 
-### 1. Create a Spark session
+1. Create a Spark session
+"""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -423,7 +397,8 @@ Use Spark when working with large-scale or distributed data processing.
     manager = SparkManager()
 
 
-### 2. Configure PostgreSQL connection
+2. Configure PostgreSQL connection
+""""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -438,14 +413,16 @@ Use Spark when working with large-scale or distributed data processing.
     )
 
 
-### 3. Setup Postgres integration
+3. Setup Postgres integration
+"""""""""""""""""""""""""""""
 
 .. code-block:: python
 
     db = manager.setup_pg(settings)
 
 
-### 4. Create a Spark DataFrame
+4. Create a Spark DataFrame
+"""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -457,7 +434,8 @@ Use Spark when working with large-scale or distributed data processing.
     ])
 
 
-### 5. Write data to PostgreSQL
+5. Write data to PostgreSQL
+"""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -468,7 +446,8 @@ Use Spark when working with large-scale or distributed data processing.
     )
 
 
-### 6. Read data from PostgreSQL
+6. Read data from PostgreSQL
+""""""""""""""""""""""""""""
 
 **Option A: Read full table**
 
@@ -496,14 +475,12 @@ Notes
   - ``ignore``
   - ``error``
 
-
 Summary
 ^^^^^^^
 
 - Use **PandasPostgresOperations** for simple workflows.
 - Use **SparkPostgresOperations** for distributed workloads.
-- Use **PostgresSettings** for environment-based configuration.
-- The database is defined via ``DB_NAME`` and cannot be overridden.
+- Use **DatabaseSettings** for environment-based configuration.
 - Table names are validated and must comply with PostgreSQL limits.
 
 
@@ -516,9 +493,9 @@ Currently, it's *NOT* using Apache Spark for that.
 You can interact with an S3 Bucket in **two ways**:
 
 **1. The simple way (no manual connection setup required)**
+
 **2. The advanced way (manual `S3Operations` instantiation)**
 
----
 
 Simple Usage
 ^^^^^^^^^^^^
@@ -541,7 +518,6 @@ Example:
         # Directly upload using FileSettings
         S3Operations.upload(settings.txt_input, "/tmp/file.txt")
 
----
 
 Advanced Usage
 ^^^^^^^^^^^^^^
