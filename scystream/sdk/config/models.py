@@ -1,9 +1,15 @@
 from typing import Optional, Dict, Literal, Union, List
-from pydantic import BaseModel, StrictStr, field_validator, Field, \
-    StrictInt, StrictFloat
+from pydantic import (
+    BaseModel,
+    StrictStr,
+    field_validator,
+    Field,
+    StrictInt,
+    StrictFloat,
+)
 
 FILE_TYPE_IDENTIFIER = "file"
-PG_TABLE_TYPE_IDENTIFIER = "pg_table"
+DATABASE_TABLE_TYPE_IDENTIFIER = "database_table"
 CUSTOM_TYPE_IDENTIFIER = "custom"
 
 
@@ -27,17 +33,22 @@ class InputOutputModel(BaseModel):
     :param config: A dictionary of configuration settings for
         the I/O, such as file path, table name, etc.
     """
-    type: Literal[FILE_TYPE_IDENTIFIER,
-                  PG_TABLE_TYPE_IDENTIFIER, CUSTOM_TYPE_IDENTIFIER]
+
+    type: Literal[
+        FILE_TYPE_IDENTIFIER,
+        DATABASE_TABLE_TYPE_IDENTIFIER,
+        CUSTOM_TYPE_IDENTIFIER,
+    ]
     description: Optional[StrictStr] = None
     config: Optional[
         Dict[
             StrictStr,
-            Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]]
-        ]] = Field(
-            default=None,
-            description="The configuration for the input values\
-                (file_path, table_name, etc.)"
+            Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]],
+        ]
+    ] = Field(
+        default=None,
+        description="The configuration for the input values\
+                (file_path, table_name, etc.)",
     )
 
     def __eq__(self, other):
@@ -46,9 +57,7 @@ class InputOutputModel(BaseModel):
         are not relevant for determining equality at this stage.
         """
         if isinstance(other, InputOutputModel):
-            return (
-                self._sorted_config() == other._sorted_config()
-            )
+            return self._sorted_config() == other._sorted_config()
         return False
 
     def _sorted_config(self):
@@ -81,11 +90,12 @@ class Entrypoint(BaseModel):
     :param inputs: A dictionary of input configurations.
     :param outputs: A dictionary of output configurations.
     """
+
     description: StrictStr
     envs: Optional[
         Dict[
             StrictStr,
-            Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]]
+            Optional[Union[StrictStr, StrictInt, StrictFloat, List, bool]],
         ]
     ] = None
     inputs: Optional[Dict[StrictStr, InputOutputModel]] = None
@@ -98,9 +108,9 @@ class Entrypoint(BaseModel):
         """
         if isinstance(other, Entrypoint):
             return (
-                self._sorted_envs() == other._sorted_envs() and
-                self._sorted_inputs() == other._sorted_inputs() and
-                self._sorted_outputs() == other._sorted_outputs()
+                self._sorted_envs() == other._sorted_envs()
+                and self._sorted_inputs() == other._sorted_inputs()
+                and self._sorted_outputs() == other._sorted_outputs()
             )
         return False
 
@@ -137,6 +147,7 @@ class ComputeBlock(BaseModel):
     :param docker_image: The Docker image for the execution
             environment, if any.
     """
+
     name: StrictStr
     description: StrictStr
     author: StrictStr
@@ -162,9 +173,7 @@ class ComputeBlock(BaseModel):
         """
 
         if isinstance(other, ComputeBlock):
-            return (
-                self._sorted_entrypoints() == other._sorted_entrypoints()
-            )
+            return self._sorted_entrypoints() == other._sorted_entrypoints()
         return False
 
     def _sorted_entrypoints(self):

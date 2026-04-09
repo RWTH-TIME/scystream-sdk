@@ -8,7 +8,7 @@ entrypoints:
     description: "Run topic modelling"
     envs:
       LANG: "de"
-    inputs: 
+    inputs:
       text_data:
         description: "Text file. Must be uploaded by the user."
         type: "invalid_type"
@@ -34,8 +34,8 @@ entrypoints:
     description: "Analyze the runtimes"
     inputs:
       run_durations:
-        type: "db_table" 
+        type: "db_table"
     outputs:
       csv_output:
         type: "file"
-        description: "A csv containing statistical information" 
+        description: "A csv containing statistical information"

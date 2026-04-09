@@ -22,12 +22,8 @@ entrypoints:
     outputs:
       ouput:
         config:
+          my_pgDB_DSN: null
           my_pgDB_TABLE: null
-          my_pgEXTENDS: test
-          my_pgPG_HOST: null
-          my_pgPG_PASS: null
-          my_pgPG_PORT: null
-          my_pgPG_USER: null
         description: <to-be-set>
-        type: pg_table
+        type: database_table
 name: <tbs>

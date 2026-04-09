@@ -24,7 +24,7 @@ The scystream-sdk contains of two main configuration objects.
     The ComputeBlockConfig is a file that "configures" the ComputeBlocks Inputs and Outputs.
     It also contains some metadata configurations (e.g. Author, Docker-Image-URL, ...).
 
-        * :meth:`scystream.sdk.config.load_config`: loads the configuration from the yaml file and returns a ComputeBlock instance. 
+        * :meth:`scystream.sdk.config.load_config`: loads the configuration from the yaml file and returns a ComputeBlock instance.
         * :meth:`scystream.sdk.config.validate_config_with_code`: can be used to validate the definition of an entrypoint in the compute block config yaml with the actual definition within the appliation code
         * :meth:`scystream.sdk.config.config_loader.generate_config_from_compute_block`: generates a compute block config file from .
         * :meth:`scystream.sdk.config.get_compute_block`: converts the entrypoints and settings defined in the code into a  `scystream.sdk.config.models.ComputeBlock` instance.
@@ -49,15 +49,15 @@ There are three main types of Settings:
     Use this when defining settings for your inputs.
     Under the hood, this works exactly the same as EnvSettings.
 
-3. InputSetting (:class:`scystream.sdk.env.settings.OutputSettings`)
+3. OutputSettings (:class:`scystream.sdk.env.settings.OutputSettings`)
     Use this when defining settings for your outputs.
     Under the hood, htis works exactly the same as EnvSettings.
 
 The SDK also provides more specific types of inputs and outputs. These offer predefined config-keys:
 
 4. FileSettings (:class:`scystream.sdk.env.settings.FileSettings`)
-    
-5. PostgresSettings (:class:`scystream.sdk.env.settings.PostgresSettings`)
+
+5. DatabaseSettings (:class:`scystream.sdk.env.settings.DatabaseSettings`)
 
 Spark Manager (:mod:`scystream.sdk.spark_manager`)
 --------------------------------------------------
@@ -66,27 +66,72 @@ We aim to handle all our data exchange & data usage using Apache Spark.
 To use Spark you need to configure the :class:`scystream.sdk.spark_manager.SparkManager`, which
 connects to a spark-master and gives you access to the session.
 
-Bare in mind, currently only the database connection is handled using Spark. When using a 
+Bare in mind, currently only the database connection is handled using Spark. When using a
 Database, please make sure to setup the connection using:
 
-* :meth:`scystream.sdk.spark_manager.SparkManager.setup_pg`: Setups connection, returns a :class:`scystream.sdk.database_handling.postgres_manager.PostgresOperations` instance.
+* :meth:`scystream.sdk.spark_manager.SparkManager.setup_pg`: Setups connection, returns a :class:`scystream.sdk.database_handling.database_manager.SparkDatabaseOperations` instance.
 
 
 Database Handling (:mod:`scystream.sdk.database_handling`)
 -----------------------------------------------------------
-The database handling package contains all the required utilities to connect & query from/to a database.
-The database handling package makes use of Apache Spark.
 
-Currently the scystream-sdk supports the following databases:
+The database handling package provides utilities to connect to and interact
+with databases using a unified interface.
 
-1. Postgres (:mod:`scystream.sdk.database_handling.postgres_manager`)
-    To configure a connection to postgres use the :class:`scystream.sdk.spark_manager.SparkManager.setup_pg` method.
-    The `postgres_manager` module currently supports:
+It supports both **Pandas-based** and **Apache Spark-based** workflows.
 
-        * :class:`scystream.sdk.database_handling.postgres_manager.PostgresConfig`: must be used to configure a postgres connection.
-        * :meth:`scystream.sdk.database_handling.postgres_manager.PostgresOperations.read`: can be used to read from a database.
-        * :meth:`scystream.sdk.database_handling.postgres_manager.PostgresOperations.write`: can be used to write a spark-dataframe to a database.
+Supported Databases
+^^^^^^^^^^^^^^^^^^^
 
+The SDK supports all databases compatible with SQLAlchemy via a DSN
+(Data Source Name), including:
+
+- PostgreSQL
+- MySQL
+- SQLite
+- Snowflake
+- and others
+
+Core Functionality
+^^^^^^^^^^^^^^^^^^
+
+The :mod:`scystream.sdk.database_handling.database_manager` module provides
+the following core abstractions:
+
+- :class:`scystream.sdk.database_handling.database_manager.BaseDatabaseOperations`
+- :meth:`scystream.sdk.database_handling.database_manager.BaseDatabaseOperations.read`
+- :meth:`scystream.sdk.database_handling.database_manager.BaseDatabaseOperations.write`
+
+These methods allow reading from and writing to a database using a consistent API.
+
+Pandas Integration
+^^^^^^^^^^^^^^^^^^
+
+For most use cases, the SDK provides a Pandas-based implementation:
+
+- :class:`scystream.sdk.database_handling.database_manager.PandasDatabaseOperations`
+
+This implementation uses SQLAlchemy and supports any DSN-compatible database.
+
+Spark Integration
+^^^^^^^^^^^^^^^^^
+
+For distributed workloads, the SDK provides a Spark-based implementation:
+
+- :class:`scystream.sdk.database_handling.database_manager.SparkDatabaseOperations`
+
+.. note::
+
+   Currently, Spark integration only supports **PostgreSQL**.
+
+To initialize Spark database access, use:
+
+.. code-block:: python
+
+    from scystream.sdk.spark_manager import SparkManager
+
+    manager = SparkManager()
+    db = manager.setup_pg(dsn)
 
 File Handling (:mod:`scystream.sdk.file_handling`)
 ------------------------------------------------------

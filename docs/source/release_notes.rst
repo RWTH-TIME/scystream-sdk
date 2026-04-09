@@ -70,3 +70,31 @@ Breaking Changes
 - Users must now explicitly install optional dependencies:
 
   - ``scystream-sdk[postgres]`` for Pandas-based operations
+
+scystream-sdk 1.4.0 - Release Notes
+-----------------------------------
+
+Added
+~~~~~
+- Introduced DSN-based database configuration across the SDK
+- Added support for generic database backends via SQLAlchemy-compatible DSNs
+- Introduced `DatabaseSettings` to replace database-specific settings
+- Unified database interaction to support multiple backends (e.g. PostgreSQL, MySQL, SQLite)
+
+Changed
+~~~~~~~
+- Replaced `PostgresSettings` with `DatabaseSettings`
+  - Now requires:
+    - ``DB_DSN`` (full database connection string)
+    - ``DB_TABLE`` (target table name)
+- Refactored database operations to be backend-agnostic
+- Updated Spark and Pandas database integrations to use DSN-based connections
+- Simplified database configuration by removing individual connection parameters (host, port, user, password)
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- Removed `PostgresConfig` entirely
+- Replaced `PostgresSettings` with `DatabaseSettings`
+- Input/Output type ``pg_table`` has been renamed to ``database_table``
+- Users must now provide a full DSN instead of individual connection parameters
+- Existing compute blocks using PostgreSQL-specific configuration must be migrated

@@ -1,9 +1,9 @@
 import pkg_resources
 from pyspark.sql import SparkSession
+
 from scystream.sdk.config import SDKConfig
-from scystream.sdk.database_handling.postgres_manager import (
-    PostgresConfig,
-    SparkPostgresOperations,
+from scystream.sdk.database_handling.database_manager import (
+    SparkDatabaseOperations,
 )
 
 
@@ -12,15 +12,16 @@ class SparkManager:
         self.config: SDKConfig = SDKConfig()
 
         psql_jar_path = pkg_resources.resource_filename(
-            "scystream.sdk", "spark_jars/postgresql-42.7.4.jar"
+            "scystream.sdk",
+            "spark_jars/postgresql-42.7.4.jar",
         )
 
         """
-        When starting the ComputeBlock using Apache Sparks DockerOperator
-        we need to make sure, to start the container in the same network
-        as the spark-worker and the spark-master.
-        Else, the spark jobs will not be executed correctly.
+        When starting the ComputeBlock using Apache Spark's DockerOperator,
+        ensure that the container runs in the same network as the spark-master
+        and spark-worker nodes. Otherwise, Spark jobs may fail.
         """
+
         self.session = (
             SparkSession.builder.master(self.config.cb_spark_master)
             .appName(self.config.app_name)
@@ -28,10 +29,15 @@ class SparkManager:
             .getOrCreate()
         )
 
-    def setup_pg(self, config: PostgresConfig):
-        return SparkPostgresOperations(self.session, config)
+    def setup_pg(self, dsn: str) -> SparkDatabaseOperations:
+        if not dsn.startswith("postgresql://"):
+            raise ValueError(
+                "Spark integration currently only supports PostgreSQL DSNs."
+            )
+
+        return SparkDatabaseOperations(self.session, dsn)
 
     def stop_session(self):
-        if self.spark:
-            self.spark.stop()
-            self.spark = None
+        if self.session:
+            self.session.stop()
+            self.session = None

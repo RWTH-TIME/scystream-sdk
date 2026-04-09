@@ -159,28 +159,24 @@ class FileSettings(EnvSettings):
         )
 
 
-class PostgresSettings(EnvSettings):
+class DatabaseSettings(EnvSettings):
     """
     A subclass of `EnvSettings` that should be used to define db_table
-    inputs and outputs located on a postgres db.
+    inputs and outputs located on a supported db.
     """
 
-    PG_USER: str
-    PG_PASS: str
-    PG_HOST: str
-    PG_PORT: int
+    DB_DSN: str
     DB_TABLE: str
-    DB_NAME: str
 
     def __init_subclass__(cls, **kwargs):
         """
-        Enforce __identifier__ for PostgresSettings subclasses.
+        Enforce __identifier__ for DatabaseSettings subclasses.
         """
         super().__init_subclass__(**kwargs)
         if not hasattr(cls, "__identifier__"):
             raise TypeError(
                 f"Class {cls.__name__} must define an __identifier__ attribute"
-                "because it inherits from PostgresSettings"
+                "because it inherits from DatabaseSettings"
             )
         # Dynamically set the env_prefix based on __identifier__
         cls.model_config = SettingsConfigDict(
