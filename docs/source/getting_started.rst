@@ -4,7 +4,7 @@ Getting started
 Install the scystream-sdk:
 
 .. code-block:: bash
-   
+
     pip install scystream-sdk
 
 Introduction
@@ -34,7 +34,7 @@ File and Postgres Settings do have predefined settings, such as `PG_USER`, `PG_P
 Basic Usage of the SDK
 ----------------------
 
-.. code-block:: python 
+.. code-block:: python
    :emphasize-lines: 4,8
 
     from scystream.sdk.core import entrypoint
@@ -99,6 +99,7 @@ Use the ``PostgresSettings`` class for configurations related to PostgreSQL data
 - ``PG_HOST``: The host address for the PostgreSQL database.
 - ``PG_PORT``: The port for the PostgreSQL database.
 - ``DB_TABLE``: The name of the database table.
+- ``DB_NAME``: The name of the database.
 
 Usage Instructions
 ^^^^^^^^^^^^^^^^^^
@@ -136,7 +137,7 @@ Therefore you should use the  `EnvSettings` class.
 
     from scystream.sdk.core import entrypoint
     from scystream.sdk.env.settings import EnvSettings, InputSettings, OutputSettings, FileSettings, PostgresSettings
-    
+
     # Assuming the Input of your Task is a database table.
     class ExampleTaskDBInput(PostgresSettings, InputSettings):
         __identifier__ = "my_first_pg"
@@ -159,12 +160,12 @@ Therefore you should use the  `EnvSettings` class.
         pg_input: ExampleTaskDBInput
         file_output: ExampleTaskFileOutput
         custom_output: CustomOutputConfigurable
-    
+
     # pass it into the Entrypoint here
     @entrypoint(ExampleTaskSettings)
     def example_task(settings):
         print("You can use your variables now in your entrypoint.")
-        
+
         print(f"Look at this: {settings.pg_input.PG_USER}")
         print(f"Or this: {settings.file_output.FILE_NAME}")
 
@@ -183,7 +184,7 @@ You can configure three aspects of the SDK.
 You can configure it like the following:
 
 .. code-block:: python
-    
+
     from scystream.sdk.config import SDKConfig
 
     SDKConfig(
@@ -236,11 +237,11 @@ For the Code we previously wrote, this is an example `cbc.yaml`:
             type: "file"
             config:
               my_first_file_BUCKET_NAME: null
-              my_first_file_FILE_NAME: null 
-              my_first_file_FILE_PATH: null 
-              my_first_file_S3_ACCESS_KEY: null 
-              my_first_file_S3_HOST: null 
-              my_first_file_S3_PORT: null 
+              my_first_file_FILE_NAME: null
+              my_first_file_FILE_PATH: null
+              my_first_file_S3_ACCESS_KEY: null
+              my_first_file_S3_HOST: null
+              my_first_file_S3_PORT: null
               my_first_file_S3_SECRET_KEY: null
           custom_output:
             description: "custom description"
@@ -250,15 +251,15 @@ For the Code we previously wrote, this is an example `cbc.yaml`:
               FB_PASS: null
 
 
-Validating the Config 
+Validating the Config
 ^^^^^^^^^^^^^^^^^^^^^
 
 You can validate you config like this:
 
 .. code-block:: python
-    
+
     from scystream.sdk.config import validate_config_with_code
-    
+
     @entrypoint
     def example_entrypoint():
         print("Example")
@@ -273,10 +274,10 @@ If you didn't write the `cbc.yaml` on your own, and already have some entrypoint
 you can also generate the `cbc.yaml` automatically.
 
 .. code-block:: python
-    
+
     from scystream.sdk.config import generate_config_from_compute_block, get_compute_block
     from pathlib import Path
-    
+
     @entrypoint()
     def example_entrypoint():
         print("Example...")
@@ -288,63 +289,224 @@ you can also generate the `cbc.yaml` automatically.
 Using a Database
 ----------------
 
-The SDK has utilities implemented to query to & from a postgres database.
-Therefore its using Apache Spark.
+The SDK provides utilities to interact with a PostgreSQL database.
+You can work with either:
 
-To interact with a database you have to do the following:
+- **Pandas DataFrames** (recommended for most use cases)
+- **Apache Spark DataFrames** (for distributed workloads)
 
-1. You have to create a Spark connection :class:`scystream.sdk.spark_manager.SparkManager`
+All database connections are configured via:
 
-2. Configure your Postgres connection using the :class:`scystream.sdk.database_handling.postgres_manager.PostgresConfig`
+- :class:`scystream.sdk.database_handling.postgres_manager.PostgresConfig`
+- :class:`scystream.sdk.env.settings.PostgresSettings`
 
-   Note: You can also use :class:`scystream.sdk.env.settings.PostgresSettings`
+.. note::
 
-3. Setup Postgres in your Spark Session :meth:`scystream.sdk.spark_manager.SparkManager.setup_pg`
+   The database name must be provided via the configuration (`DB_NAME`).
+   It cannot be overridden at runtime.
 
-4. Interact with the Database using :mod:`scystream.sdk.database_handling.postgres_manager`!
 
+Configuration
+^^^^^^^^^^^^^
 
-See a simple example here:
+You can configure your PostgreSQL connection in two ways.
+
+**Option 1: Using PostgresConfig**
 
 .. code-block:: python
-   :emphasize-lines: 6, 8, 15, 18, 24, 32
-    
-    from scystream.sdk.spark_manager import SparkManager
+
     from scystream.sdk.database_handling.postgres_manager import PostgresConfig
 
-    @entrypoint()
-    def test():
-        manager = SparkManager()
-        
-        database_conf = PostgresConfig(
-            pg_user="postgres",
-            pg_pass="postgres",
-            pg_host="postgres",
-            pg_port=5432
-        )
-        
-        db_conn = manager.setup_pg(database_conf)
-        
-        # Use sparks dataframes
-        spark_df = manager.session.createDataFrame({
-            Row(id=1, name="test"),
-            Row(id=2, name="test")
-        })
+    config = PostgresConfig(
+        PG_USER="postgres",
+        PG_PASS="postgres",
+        PG_HOST="postgres",
+        PG_PORT=5432,
+        DB_NAME="postgres",
+    )
 
-        # Write to the database
-        db_conn.write(
-            database_name="postgres",
-            dataframe=spark_df,
-            table="test",
-            mode="overwrite"
-        )
 
-        # Read from the database
-        read_df = db_conn.read(
-            database_name="postgres",
-            query=f"SELECT id FROM test WHERE id > 1"
-        )
-         
+**Option 2: Using PostgresSettings (recommended in pipelines)**
+
+.. code-block:: python
+
+    from scystream.sdk.env.settings import PostgresSettings
+
+    class MyDatabaseSettings(PostgresSettings):
+        __identifier__ = "MY_DB"
+
+The following environment variables must be provided:
+
+.. code-block:: bash
+
+    MY_DB_PG_USER=postgres
+    MY_DB_PG_PASS=postgres
+    MY_DB_PG_HOST=postgres
+    MY_DB_PG_PORT=5432
+    MY_DB_DB_NAME=postgres
+    MY_DB_DB_TABLE=my_table
+
+
+Working with Pandas DataFrames
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Pandas integration is the simplest way to interact with PostgreSQL
+and is recommended when Spark is not required.
+
+### Initialize the Postgres client
+
+.. code-block:: python
+
+    from scystream.sdk.database_handling.postgres_manager import (
+        PandasPostgresOperations,
+    )
+
+    pg = PandasPostgresOperations(config)
+
+
+### Write a Pandas DataFrame
+
+.. code-block:: python
+
+    import pandas as pd
+
+    df = pd.DataFrame([
+        {"id": 1, "name": "test"},
+        {"id": 2, "name": "test"},
+    ])
+
+    pg.write(
+        table="test_table",
+        data=df,
+        mode="overwrite",  # or "append"
+    )
+
+
+### Read data from PostgreSQL
+
+**Option A: Read full table**
+
+.. code-block:: python
+
+    df = pg.read(table="test_table")
+
+**Option B: Use custom query**
+
+.. code-block:: python
+
+    df = pg.read(
+        query="SELECT id FROM test_table WHERE id > 1"
+    )
+
+
+Notes
+^^^^^
+
+- Table names must not exceed **63 characters** (PostgreSQL limit).
+- The SDK will raise an error if this limit is exceeded.
+- Supported write modes:
+  - ``overwrite`` → replaces table
+  - ``append`` → inserts into existing table
+
+
+Spark Integration
+^^^^^^^^^^^^^^^^^
+
+Use Spark when working with large-scale or distributed data processing.
+
+### 1. Create a Spark session
+
+.. code-block:: python
+
+    from scystream.sdk.spark_manager import SparkManager
+
+    manager = SparkManager()
+
+
+### 2. Configure PostgreSQL connection
+
+.. code-block:: python
+
+    from scystream.sdk.database_handling.postgres_manager import PostgresConfig
+
+    config = PostgresConfig(
+        PG_USER="postgres",
+        PG_PASS="postgres",
+        PG_HOST="postgres",
+        PG_PORT=5432,
+        DB_NAME="postgres",
+    )
+
+
+### 3. Setup Postgres integration
+
+.. code-block:: python
+
+    db = manager.setup_pg(settings)
+
+
+### 4. Create a Spark DataFrame
+
+.. code-block:: python
+
+    from pyspark.sql import Row
+
+    spark_df = manager.session.createDataFrame([
+        Row(id=1, name="test"),
+        Row(id=2, name="test"),
+    ])
+
+
+### 5. Write data to PostgreSQL
+
+.. code-block:: python
+
+    db.write(
+        table="test_table",
+        dataframe=spark_df,
+        mode="overwrite",
+    )
+
+
+### 6. Read data from PostgreSQL
+
+**Option A: Read full table**
+
+.. code-block:: python
+
+    df = db.read(table="test_table")
+
+**Option B: Use custom query**
+
+.. code-block:: python
+
+    df = db.read(
+        query="SELECT id FROM test_table WHERE id > 1"
+    )
+
+
+Notes
+^^^^^
+
+- Spark uses JDBC for communication with PostgreSQL.
+- The PostgreSQL driver is automatically included in the SDK.
+- Supported write modes:
+  - ``overwrite``
+  - ``append``
+  - ``ignore``
+  - ``error``
+
+
+Summary
+^^^^^^^
+
+- Use **PandasPostgresOperations** for simple workflows.
+- Use **SparkPostgresOperations** for distributed workloads.
+- Use **PostgresSettings** for environment-based configuration.
+- The database is defined via ``DB_NAME`` and cannot be overridden.
+- Table names are validated and must comply with PostgreSQL limits.
+
+
 Using a S3 Bucket
 -----------------
 
@@ -353,7 +515,7 @@ Currently, it's *NOT* using Apache Spark for that.
 
 You can interact with an S3 Bucket in **two ways**:
 
-**1. The simple way (no manual connection setup required)**  
+**1. The simple way (no manual connection setup required)**
 **2. The advanced way (manual `S3Operations` instantiation)**
 
 ---
@@ -376,7 +538,7 @@ Example:
         # Directly download using FileSettings
         S3Operations.download(settings.txt_input, "/tmp/file.txt")
 
-        # Directly upload using FileSettings 
+        # Directly upload using FileSettings
         S3Operations.upload(settings.txt_input, "/tmp/file.txt")
 
 ---
@@ -387,7 +549,7 @@ Advanced Usage
 If you want to reuse the same connection for multiple operations or provide a
 custom `S3Config`, you can manually initialize `S3Operations`.
 
-1. Configure the S3 Connection using :class:`scystream.sdk.file_handling.s3_manager.S3Config`  
+1. Configure the S3 Connection using :class:`scystream.sdk.file_handling.s3_manager.S3Config`
    or :class:`scystream.sdk.env.settings.FileSettings`.
 
 2. Setup the S3 Connection using :class:`scystream.sdk.file_handling.s3_manager.S3Operations`.

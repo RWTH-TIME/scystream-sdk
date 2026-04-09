@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="scystream-sdk",
-    version="1.2.2",
+    version="1.3.0",
     description="The official SDK for developing scystream compute blocks",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -23,20 +23,26 @@ setup(
         "pydantic-settings>=2.6.1",
         "pyspark>=3.5.3",
         "setuptools>=75.5.0",
-        "boto3>=1.35.65"
+        "boto3>=1.35.65",
+        "setuptools>=65.0.0",
     ],
     extras_require={
+        "postgres": [
+            "pandas>=2.0.0",
+            "SQLAlchemy>=2.0.0",
+            "psycopg2-binary>=2.9.9",
+        ],
         "dev": [
             "sphinx>=8.1.3",
             "sphinx-autodoc-typehints>=2.5.0",
             "sphinxawesome-theme>=5.3.2",
-            "Pygments>=2.18.0"
-        ]
+            "Pygments>=2.18.0",
+        ],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
 )

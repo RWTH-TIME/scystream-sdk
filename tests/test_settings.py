@@ -4,11 +4,18 @@ from scystream.sdk.config.entrypoints import TEST_reset_registered_functions
 import unittest
 import os
 from scystream.sdk.core import entrypoint
-from scystream.sdk.env.settings import EnvSettings, InputSettings, \
-    OutputSettings, PostgresSettings, FileSettings
-from scystream.sdk.config.config_loader import \
-    validate_config_with_code, get_compute_block, \
-    generate_config_from_compute_block
+from scystream.sdk.env.settings import (
+    EnvSettings,
+    InputSettings,
+    OutputSettings,
+    PostgresSettings,
+    FileSettings,
+)
+from scystream.sdk.config.config_loader import (
+    validate_config_with_code,
+    get_compute_block,
+    generate_config_from_compute_block,
+)
 from scystream.sdk.config import SDKConfig
 
 # Validate Cfgs
@@ -45,6 +52,7 @@ class SimpleSettings(EnvSettings):
     input_one: SimpleSettingsInputOne
     output_one: SimpleSettingsOutputOne
 
+
 # WithoutDefaults
 
 
@@ -75,8 +83,7 @@ class TestSettings(unittest.TestCase):
 
         try:
             cb = get_compute_block()
-            generate_config_from_compute_block(
-                cb, generated_config_path)
+            generate_config_from_compute_block(cb, generated_config_path)
         except Exception as e:
             self.fail(f"Exception raised unexpectedly: {e}")
 
@@ -88,17 +95,20 @@ class TestSettings(unittest.TestCase):
 
         # Compare the contents
         self.assertEqual(
-            generated_yaml, reference_yaml,
-            "Generated YAML does not match the reference YAML"
+            generated_yaml,
+            reference_yaml,
+            "Generated YAML does not match the reference YAML",
         )
 
         generated_config_path.unlink()
 
     def test_generate_config_file_db_type(self):
         generated_config_path = Path(
-            f"{self.TEST_SETTINGS_FILES}/gen_more_types.yaml")
+            f"{self.TEST_SETTINGS_FILES}/gen_more_types.yaml"
+        )
         reference_config_path = Path(
-            f"{self.TEST_SETTINGS_FILES}/ref_more_types.yaml")
+            f"{self.TEST_SETTINGS_FILES}/ref_more_types.yaml"
+        )
 
         @entrypoint(SettingOtherTypes)
         def example_entrypoint(settings):
@@ -106,8 +116,7 @@ class TestSettings(unittest.TestCase):
 
         try:
             cb = get_compute_block()
-            generate_config_from_compute_block(
-                cb, generated_config_path)
+            generate_config_from_compute_block(cb, generated_config_path)
         except Exception as e:
             self.fail(f"Exception raised unexpectedly: {e}")
 
@@ -119,8 +128,9 @@ class TestSettings(unittest.TestCase):
 
         # Compare the contents
         self.assertEqual(
-            generated_yaml, reference_yaml,
-            "Generated YAML does not match the reference YAML"
+            generated_yaml,
+            reference_yaml,
+            "Generated YAML does not match the reference YAML",
         )
 
         generated_config_path.unlink()
@@ -132,7 +142,7 @@ class TestSettings(unittest.TestCase):
         # Set up the environment variables
         env_vars = {
             "my_file_one_S3_HOST": "overridden_host",
-            "my_file_one_S3_PORT": "overridden_port",
+            "my_file_one_S3_PORT": 1234,
             "my_file_one_S3_ACCESS_KEY": "overridden_access",
             "my_file_one_S3_SECRET_KEY": "overridden_secret",
             "my_file_one_BUCKET_NAME": "overridden_bucket",
@@ -142,15 +152,17 @@ class TestSettings(unittest.TestCase):
             "my_pg_PG_USER": "overridden_user",
             "my_pg_PG_PASS": "overridden_pass",
             "my_pg_PG_HOST": "overridden_host",
-            "my_pg_PG_PORT": "overridden_port",
-            "my_pg_DB_TABLE": "overridden_table"
+            "my_pg_PG_PORT": 9999,
+            "my_pg_DB_TABLE": "overridden_table",
+            "my_pg_DB_NAME": "overridden_name",
         }
 
         # Set the environment variables
         for key, value in env_vars.items():
-            os.environ[key] = value
+            os.environ[key] = str(value)
 
         try:
+
             @entrypoint(SettingOtherTypes)
             def example_entrypoint(settings):
                 return (
@@ -167,17 +179,27 @@ class TestSettings(unittest.TestCase):
                     settings.output.PG_HOST,
                     settings.output.PG_PORT,
                     settings.output.DB_TABLE,
+                    settings.output.DB_NAME,
                 )
 
             result = example_entrypoint()
 
             # Expected values
             expected_values = [
-                "overridden_host", "overridden_port", "overridden_access",
-                "overridden_secret", "overridden_bucket",
-                "overridden_file_path", "overridden_file_name",
-                "overridden_file_ext", "overridden_user", "overridden_pass",
-                "overridden_host", "overridden_port", "overridden_table"
+                "overridden_host",
+                1234,
+                "overridden_access",
+                "overridden_secret",
+                "overridden_bucket",
+                "overridden_file_path",
+                "overridden_file_name",
+                "overridden_file_ext",
+                "overridden_user",
+                "overridden_pass",
+                "overridden_host",
+                9999,
+                "overridden_table",
+                "overridden_name",
             ]
 
             # Assert that the results match expected values
@@ -202,7 +224,7 @@ class TestSettings(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_config_with_code(
                 "example_entrypoint",
-                f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_inv.yaml"
+                f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_inv.yaml",
             )
 
     def test_entrypoint_yaml_cfg_not_different_to_code_cfg(self):
@@ -218,7 +240,7 @@ class TestSettings(unittest.TestCase):
         try:
             validate_config_with_code(
                 "example_entrypoint",
-                f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_v.yaml"
+                f"{self.TEST_SETTINGS_FILES}/simple_cfg_entrypoint_v.yaml",
             )
         except Exception:
             self.fail("")
@@ -228,6 +250,7 @@ class TestSettings(unittest.TestCase):
         Tests if validate_config_with_code works if config and settings
         correspond.
         """
+
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print(f"{settings}....")
@@ -238,22 +261,22 @@ class TestSettings(unittest.TestCase):
             )
         except Exception:
             self.fail(
-                "validate_config_with_code raised an Exception unexpectedly!")
+                "validate_config_with_code raised an Exception unexpectedly!"
+            )
 
     def test_validate_cfgs_error(self):
         """
         Tests if validate_config_with_code works if config and settings
         do not correspond.
         """
+
         @entrypoint(SimpleSettings)
         def example_entrypoint(settings):
             print(f"{settings}....")
 
         invalid_config = f"{self.TEST_SETTINGS_FILES}/simple_cfg_invalid.yaml"
         with self.assertRaises(ValueError):
-            validate_config_with_code(
-                config_path=invalid_config
-            )
+            validate_config_with_code(config_path=invalid_config)
 
     def test_entrypoint_with_setting_default(self):
         """
@@ -290,10 +313,7 @@ class TestSettings(unittest.TestCase):
         # Tests if it works, if ENVs that MUST be set, are actually set
         @entrypoint(WithoutDefaults)
         def without_def_settings(settings):
-            return (
-                settings.LANGUAGE,
-                settings.input_one.TEST
-            )
+            return (settings.LANGUAGE, settings.input_one.TEST)
 
         # set environments
         os.environ["LANGUAGE"] = "dummy global"

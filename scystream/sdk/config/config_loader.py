@@ -2,8 +2,11 @@ import yaml
 from typing import Union
 from pydantic import ValidationError
 from pathlib import Path
-from scystream.sdk.config.models import ComputeBlock, Entrypoint, \
-    InputOutputModel
+from scystream.sdk.config.models import (
+    ComputeBlock,
+    Entrypoint,
+    InputOutputModel,
+)
 from scystream.sdk.config.compute_block_utils import get_compute_block
 
 CBC_CONFIG_DEFAULT_IDENTIFIER = "cbc.yaml"
@@ -26,12 +29,15 @@ class SDKConfig:
     :param cb_spark_master: The URL of the Spark master
         (default: 'spark://spark-master:7077').
     """
+
     _instance = None
+    app_name = ""
+    cb_spark_master = ""
 
     def __new__(
         cls,
         app_name: str = UNNAMED_APP_NAME,
-        cb_spark_master: str = COMPUTE_BLOCK_SPARK_DEFAULT_MASTER
+        cb_spark_master: str = COMPUTE_BLOCK_SPARK_DEFAULT_MASTER,
     ):
         """
         Creates or returns the singleton instance of SDKConfig.
@@ -55,19 +61,20 @@ class SDKConfig:
         """
         return self.cb_spark_master
 
-    def set_cb_spark_master(self, spark_master: str) -> str:
+    def set_cb_spark_master(self, spark_master: str) -> None:
         """
         Set the Spark master URL.
 
         :param spark_master: The spark master URL with this schema:
             spark://url:port
         """
+        self.cb_spark_master = spark_master
 
 
 def _compare_configs(
-        c1: Union[ComputeBlock, Entrypoint, InputOutputModel],
-        c2: Union[ComputeBlock, Entrypoint, InputOutputModel],
-        name="block"
+    c1: Union[ComputeBlock, Entrypoint, InputOutputModel],
+    c2: Union[ComputeBlock, Entrypoint, InputOutputModel],
+    name="block",
 ):
     """
     Compares two configurations and raises a ValueError if they don't match.
@@ -87,8 +94,7 @@ def _compare_configs(
 
 
 def validate_config_with_code(
-        entrypoint_name: str | None = None,
-        config_path: str | None = None
+    entrypoint_name: str | None = None, config_path: str | None = None
 ):
     """
     Validates that the configuration loaded from the YAML file matches
@@ -106,7 +112,7 @@ def validate_config_with_code(
     if entrypoint_name:
         _compare_configs(
             block_from_cfg.entrypoints[entrypoint_name],
-            block_from_code.entrypoints[entrypoint_name]
+            block_from_code.entrypoints[entrypoint_name],
         )
     else:
         _compare_configs(block_from_cfg, block_from_code)
@@ -147,8 +153,7 @@ def load_config(path_to_cfg: str | None) -> ComputeBlock:
 
 
 def generate_config_from_compute_block(
-    compute_block: ComputeBlock,
-    output_path: Path
+    compute_block: ComputeBlock, output_path: Path
 ):
     """
     Generates a YAML configuration file from a ComputeBlock instance.

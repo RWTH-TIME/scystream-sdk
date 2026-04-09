@@ -12,34 +12,40 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'scystream-sdk'
-copyright = '2024, RWTH-TIME'
-author = 'RWTH-TIME'
+project = "scystream-sdk"
+copyright = "2024, RWTH-TIME"
+author = "RWTH-TIME"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autosummary",
 ]
 
-autodoc_mock_imports = ['setup']
+autodoc_mock_imports = [
+    "pandas",
+    "sqlalchemy",
+    "psycopg2",
+    "pkg_resources",
+    "pyspark",
+]
 autodoc_class_signature = "separated"
 
-templates_path = ['_templates']
-exclude_patterns = ['tests', 'scripts']
+templates_path = ["_templates"]
+exclude_patterns = ["tests", "scripts"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_permalinks_icon = '<span>#</span>'
-html_theme = 'sphinxawesome_theme'
+html_permalinks_icon = "<span>#</span>"
+html_theme = "sphinxawesome_theme"
 pygments_style = "sas"
 pygments_style_dark = "github-dark"
