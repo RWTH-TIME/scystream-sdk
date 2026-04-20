@@ -104,6 +104,46 @@ the following core abstractions:
 
 These methods allow reading from and writing to a database using a consistent API.
 
+Schema Support (PostgreSQL)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The SDK supports optional database schemas to logically separate tables within the same database.
+
+Schemas are configured at initialization time of the database operations class and are applied automatically to all read and write operations.
+
+.. code-block:: python
+
+    from scystream.sdk.database_handling.database_manager import PandasDatabaseOperations
+
+    db = PandasDatabaseOperations(
+        dsn="postgresql://user:pass@host:5432/db",
+        schema="my_project"
+    )
+
+    df = db.read(table="users")
+    db.write(table="users", data=df)
+
+This will result in queries being executed against:
+
+.. code-block:: sql
+
+    SELECT * FROM "my_project"."users"
+
+If no schema is provided, the default database schema (e.g. public in PostgreSQL) is used.
+
+Schema Creation
+^^^^^^^^^^^^^^^^^^
+
+When using schemas, the schema must exist in the target database before performing read or write operations.
+
+.. important::
+
+    Automatic schema creation is currently only supported for PostgreSQL databases.
+
+    For other database systems, schema creation (or equivalent namespace setup) must be handled externally.
+
+    Also the read and write methods might not work properly
+
 Pandas Integration
 ^^^^^^^^^^^^^^^^^^
 

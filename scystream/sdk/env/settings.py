@@ -167,6 +167,7 @@ class DatabaseSettings(EnvSettings):
 
     DB_DSN: str
     DB_TABLE: str
+    DB_SCHEMA: str | None = None
 
     def __init_subclass__(cls, **kwargs):
         """

@@ -10,8 +10,9 @@ from sqlalchemy.sql import quoted_name
 class BaseDatabaseOperations(ABC):
     MAX_TABLE_NAME_LENGTH = 63
 
-    def __init__(self, dsn: str):
+    def __init__(self, dsn: str, schema: str | None = None):
         self.dsn = dsn
+        self.schema = self._normalize_schema(schema)
 
     def _validate_table_name(self, table: str):
         if len(table) > self.MAX_TABLE_NAME_LENGTH:
@@ -31,6 +32,13 @@ class BaseDatabaseOperations(ABC):
         if table:
             self._validate_table_name(table)
 
+    @staticmethod
+    def _normalize_schema(schema: str | None) -> str | None:
+        if schema is None:
+            return None
+        schema = schema.strip()
+        return schema or None
+
     @abstractmethod
     def read(
         self,
@@ -40,7 +48,12 @@ class BaseDatabaseOperations(ABC):
         pass
 
     @abstractmethod
-    def write(self, table: str, data, mode: str = "overwrite"):
+    def write(
+        self,
+        table: str,
+        data,
+        mode: str = "overwrite",
+    ):
         pass
 
 
@@ -54,8 +67,8 @@ class SparkDatabaseOperations(BaseDatabaseOperations):
     database connectivity.
     """
 
-    def __init__(self, spark: SparkSession, dsn: str):
-        super().__init__(dsn)
+    def __init__(self, spark: SparkSession, dsn: str, schema: str | None):
+        super().__init__(dsn, schema)
         self.spark_session = spark
 
         self.jdbc_url, self.properties = self._dsn_to_jdbc(dsn)
@@ -115,7 +128,10 @@ class SparkDatabaseOperations(BaseDatabaseOperations):
         """
         self._validate_read_inputs(table, query)
 
-        dbtable_option = f"({query}) AS subquery" if query else table
+        if query:
+            dbtable_option = f"({query}) AS subquery"
+        else:
+            dbtable_option = f"{self.schema}.{table}" if self.schema else table
 
         return (
             self.spark_session.read.format("jdbc")
@@ -125,7 +141,13 @@ class SparkDatabaseOperations(BaseDatabaseOperations):
             .load()
         )
 
-    def write(self, table: str, dataframe, mode="overwrite"):
+    def write(
+        self,
+        table: str,
+        dataframe,
+        mode="overwrite",
+        schema: str | None = None,
+    ):
         """
         Writes a Spark DataFrame to a specified table in a PostgreSQL database
         using JDBC.
@@ -146,9 +168,16 @@ class SparkDatabaseOperations(BaseDatabaseOperations):
         """
         self._validate_table_name(table)
 
-        dataframe.write.format("jdbc").option("url", self.jdbc_url).option(
-            "dbtable", table
-        ).options(**self.properties).mode(mode).save()
+        dbtable_option = f"{schema}.{table}" if self.schema else table
+
+        (
+            dataframe.write.format("jdbc")
+            .option("url", self.jdbc_url)
+            .option("dbtable", dbtable_option)
+            .options(**self.properties)
+            .mode(mode)
+            .save()
+        )
 
 
 class PandasDatabaseOperations(BaseDatabaseOperations):
@@ -171,7 +200,7 @@ class PandasDatabaseOperations(BaseDatabaseOperations):
     datasets where distributed processing (e.g., Spark) is not required.
     """
 
-    def __init__(self, dsn: str):
+    def __init__(self, dsn: str, schema: str | None = None):
         """
         Initialize the PandasDatabaseOperations instance.
 
@@ -180,13 +209,15 @@ class PandasDatabaseOperations(BaseDatabaseOperations):
             - postgresql://user:pass@host:5432/db
             - mysql+pymysql://user:pass@host/db
             - sqlite:///local.db
+        :param schema: An optional schema used in postgres databases can be
+            specified
 
         :raises ValueError: If the DSN is invalid or connection fails.
 
         :note: Uses SQLAlchemy's connection pooling with `pool_pre_ping=True`
             to ensure stale connections are automatically refreshed.
         """
-        super().__init__(dsn)
+        super().__init__(dsn, schema)
         self.engine = create_engine(dsn, pool_pre_ping=True)
 
     def read(
@@ -219,7 +250,10 @@ class PandasDatabaseOperations(BaseDatabaseOperations):
         self._validate_read_inputs(table, query)
 
         if table:
-            query = f'SELECT * FROM "{table}"'
+            if self.schema:
+                query = f'SELECT * FROM "{self.schema}"."{table}"'
+            else:
+                query = f'SELECT * FROM "{table}"'
 
         return pd.read_sql(text(query), self.engine)
 
@@ -266,8 +300,9 @@ class PandasDatabaseOperations(BaseDatabaseOperations):
         table_name = quoted_name(table, quote=True)
 
         data.to_sql(
-            table_name,
-            self.engine,
+            name=table_name,
+            con=self.engine,
+            schema=self.schema,
             if_exists=if_exists,
             index=False,
         )

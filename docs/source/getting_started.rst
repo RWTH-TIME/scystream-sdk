@@ -96,6 +96,7 @@ Use the ``DatabaseSettings`` class for configurations related to database inputs
 
 - ``DB_DSN``: Full database connection string (SQLAlchemy compatible)
 - ``DB_TABLE``: The name of the database table.
+- ``DB_SCHEMA`` (optional): The database schema (PostgreSQL only)
 
 Usage Instructions
 ^^^^^^^^^^^^^^^^^^
@@ -106,6 +107,7 @@ Important Notes
 ---------------
 
 1. **__identifier__ Requirement**:
+
    - When using ``FileSettings`` or ``DatabaseSettings``, you **must** define an ``__identifier__`` attribute in your input/output class.
    - The ``__identifier__`` is used to prefix the environment variable keys, ensuring that they do not conflict when multiple inputs or outputs of the same type are defined.
    - Make sure, that the ``__identifier__`` is unique across your project!
@@ -118,6 +120,7 @@ Important Notes
           __identifier__ = "my_file_input"  # Prefixes env vars with `my_file_input_`
 
 2. **Optional but Recommended**:
+
    - While you are not required to use these predefined settings, we strongly recommend them for file or PostgreSQL-based inputs and outputs to maintain consistency and avoid configuration errors.
 
 Example Configuration
@@ -167,6 +170,48 @@ Therefore you should use the  `EnvSettings` class.
 
         print("Executing example_task")
 
+Optional: Using Schemas (PostgreSQL)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The SDK supports optional database schemas when working with PostgreSQL.
+
+You can define a schema using the DB_SCHEMA environment variable:
+
+.. code-block:: bash
+
+    input_iptuput_pre_DB_SCHEMA=my_project
+
+When provided, all database operations will automatically use this schema.
+
+Example:
+
+.. code-block:: python
+
+    pg = PandasDatabaseOperations(
+        dsn=settings.MY_DB_DB_DSN,
+        schema=settings.MY_DB_DB_SCHEMA
+    )
+
+    df = pg.read(table="users")
+
+This results in queries like:
+
+.. code-block:: sql
+
+    SELECT * FROM "my_project"."users"
+
+If no schema is defined, the default schema (e.g. public) is used.
+
+Schema Creation
+^^^^^^^^^^^^^^^^^^
+
+Schemas must exist in the database before they can be used.
+
+.. important::
+
+    Automatic schema creation is currently only supported for PostgreSQL.
+
+    For other databases, schema or namespace creation must be handled externally.
 
 Configure the SDK
 ------------------
@@ -315,7 +360,7 @@ As the DB_DSN variable, you can use all SQLAlchemy supported DSNs
 
     MY_DB_DB_DSN=postgresql://user:pass@host:5432/db
     MY_DB_DB_TABLE=my_table
-
+    MY_DB_DB_SCHEMA=schema # is optional, and should only be used for postgres databases
 
 Working with Pandas DataFrames
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -329,10 +374,13 @@ Initialize the Postgres client
 .. code-block:: python
 
     from scystream.sdk.database_handling.database_manager import (
-        PandasPostgresOperations,
+        PandasDatabaseOperations,
     )
 
-    pg = PandasDatabaseOperations(config)
+    pg = PandasDatabaseOperations(
+        dsn=settings.input_output_DB_DSN,
+        schema=settings.input_output_DB_SCHEMA,
+    )
 
 
 Write a Pandas DataFrame
@@ -355,7 +403,7 @@ Write a Pandas DataFrame
 
 
 Read data from PostgreSQL
-""""""""""""""""""""""""
+""""""""""""""""""""""""""
 
 **Option A: Read full table**
 
@@ -398,7 +446,7 @@ Use Spark when working with large-scale or distributed data processing.
 
 
 2. Configure PostgreSQL connection
-""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -481,6 +529,7 @@ Summary
 - Use **PandasPostgresOperations** for simple workflows.
 - Use **SparkPostgresOperations** for distributed workloads.
 - Use **DatabaseSettings** for environment-based configuration.
+- Optionally define **DB_SCHEMA** when working with PostgreSQL.
 - Table names are validated and must comply with PostgreSQL limits.
 
 

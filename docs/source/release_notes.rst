@@ -98,3 +98,20 @@ Breaking Changes
 - Input/Output type ``pg_table`` has been renamed to ``database_table``
 - Users must now provide a full DSN instead of individual connection parameters
 - Existing compute blocks using PostgreSQL-specific configuration must be migrated
+
+scystream-sdk 1.5.0 - Release Notes
+-----------------------------------
+
+Added
+~~~~~
+- Added support for **database schemas** in database operations
+- Introduced optional ``DB_SCHEMA`` configuration for ``DatabaseSettings``
+- Schema is now applied automatically to all database read/write operations
+- Added internal normalization of schema values (e.g. ``""`` and whitespace are treated as ``None``)
+
+Notes
+~~~~~~~~~
+- Schema support is primarily intended for **PostgreSQL**
+- Automatic schema creation is currently **only supported for PostgreSQL**
+- For other databases (e.g. MySQL, SQLite), schema behavior depends on the underlying backend
+
