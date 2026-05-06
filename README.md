@@ -23,7 +23,7 @@ Each worker can have multiple entrypoints, each aiming to solve one task.
 These entrypoints can be configured from the outside using the **Settings**.
 These are basically ENV-Variables, which will be parsed & validated using pydantic.
 
-Find the whole Documentation [here](https://docs-scystream.go.iso.rwth-aachen.de/)!
+Find the whole Documentation [here](https://rwth-time.github.io/scystream-sdk/)!
 
 ## Development of the SDK
 
@@ -36,7 +36,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-2. Install the package within the venv 
+2. Install the package within the venv
 
 > [!NOTE]
 > This will also install all the install_requirements from the setup.py
